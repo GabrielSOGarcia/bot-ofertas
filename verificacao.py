@@ -155,7 +155,7 @@ def verificar(cfg, pasta_bot, whatsapp_url="http://127.0.0.1:3010"):
         def conferir():
             lido = leituras.get(canal["id"])
             if not lido:
-                return False, "ainda sem nenhuma leitura"
+                return None, "ainda sem nenhuma leitura (esperando a 1ª)"   # None = esperando (⏳), não é erro
             if lido.get("mensagens") and time.time() - (lido.get("quando") or 0) / 1000 < LEITURA_VELHA_HORAS * 3600:
                 minutos = (time.time() - lido["quando"] / 1000) / 60
                 return True, f"lido há {minutos:.0f} min, {len(lido['mensagens'])} mensagens"
@@ -165,7 +165,7 @@ def verificar(cfg, pasta_bot, whatsapp_url="http://127.0.0.1:3010"):
             if lido.get("ao_vivo"):
                 return False, "nenhum post ao vivo há mais de 24 h (o chip ainda segue o canal?)"
             if lido.get("erro"):
-                return False, ("esperando o 1º post ao vivo: siga o canal no celular do chip "
+                return None, ("esperando o 1º post ao vivo: siga o canal no celular do chip "
                                "(o histórico não abre: " + str(lido["erro"])[:60] + ")")
             return False, f"sem leitura nova há mais de {LEITURA_VELHA_HORAS} h"
         return conferir
@@ -199,10 +199,15 @@ def verificar(cfg, pasta_bot, whatsapp_url="http://127.0.0.1:3010"):
     return resultados
 
 def resumo(resultados, bot, quando=None):
-    falhas = [r for r in resultados if not r[0]]
+    # ✅ ok | ⏳ esperando (ainda não leu, nada quebrado) | ❌ só quando deu erro de verdade (09/11, Gabriel)
+    falhas = [r for r in resultados if r[0] is False]
+    esperando = [r for r in resultados if r[0] is None]
     cabeca = (f"✅ <b>{html.escape(bot)}</b>: verificação geral, tudo certo" if not falhas else
               f"⚠️ <b>{html.escape(bot)}</b>: verificação geral, {len(falhas)} problema(s)")
+    if esperando:
+        cabeca += f", {len(esperando)} esperando"
     if quando:
         cabeca += f" ({quando})"
-    linhas = [f"{'✅' if ok else '❌'} {html.escape(nome)}: {html.escape(detalhe)}" for ok, nome, detalhe in resultados]
+    icone = {True: "✅", None: "⏳", False: "❌"}
+    linhas = [f"{icone.get(ok, '❌')} {html.escape(nome)}: {html.escape(detalhe)}" for ok, nome, detalhe in resultados]
     return cabeca + "\n\n" + "\n".join(linhas)

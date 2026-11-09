@@ -3518,7 +3518,7 @@ def verificacao_geral():
         resultados = verificacao.verificar(cfg, os.getcwd(), WHATSAPP_URL)
         texto = verificacao.resumo(resultados, BOT, f"{datetime.now():%d/%m %H:%M}")
         avisar_painel(texto)
-        problemas = [f"{nome}: {detalhe}" for ok, nome, detalhe in resultados if not ok]
+        problemas = [f"{nome}: {detalhe}" for ok, nome, detalhe in resultados if ok is False]   # ⏳ esperando não conta
         print("  Verificação geral:", "tudo certo" if not problemas else "; ".join(problemas))
     except Exception as e:
         print("  Verificação geral falhou:", type(e).__name__, e)
