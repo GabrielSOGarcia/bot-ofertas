@@ -93,8 +93,20 @@ class SessaoML:
         # {"nome", "oficial", "reputacao" ("5_green"...), "lider" ("platinum"/"gold"/""), "vendas", "full"}
         if card["id"] in _vendedores:
             return _vendedores[card["id"]]
-        html = self._pedir("https://" + card["url"].split("#")[0])
-        ev = re.search(r'"event_data":\{"seller_id":\d+,(.{0,600}?)\}', html, re.S)
+        # 09/11: no servidor a página do produto vem com VERIFICAÇÃO de robô. O pedaço "seller_data" que a própria
+        # página carrega à parte (/p/api/deferred) é leve e traz o mesmo vendedor. A página inteira fica de reserva.
+        html, ev = "", None
+        ident = re.search(r"/(?:p|up)/(MLBU?\d+)", card.get("url") or "")
+        if ident:
+            try:
+                html = self._pedir(f"{BASE}/p/api/deferred?id={ident.group(1)}&app=pdp&component_ids=seller_data"
+                                   "&allow_test_items=false")
+                ev = re.search(r'"event_data":\{"seller_id":\d+,(.{0,600}?)\}', html, re.S)
+            except (urllib.error.URLError, OSError, SessaoCaiu):
+                ev = None
+        if not ev:
+            html = self._pedir("https://" + card["url"].split("#")[0])
+            ev = re.search(r'"event_data":\{"seller_id":\d+,(.{0,600}?)\}', html, re.S)
         if not ev:
             self.ultimo_problema = (f"página do produto sem o vendedor ({len(html)} letras; "
                                     f"{'pediu verificação' if 'verification' in html or 'captcha' in html.lower() else 'formato diferente'})")

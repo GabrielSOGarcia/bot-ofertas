@@ -2354,7 +2354,8 @@ def degrau_loja_ml(p):
         return 2
     if v["oficial"] or v["lider"] in ("platinum", "gold"):
         return 3
-    if v["reputacao"] == "5_green" and v["vendas"] >= VENDAS_LOJA_COMUM_ML:
+    # (o total de vendas da loja nem sempre vem: vale também o produto com muitas vendas)
+    if v["reputacao"] == "5_green" and max(v["vendas"], int(p.get("sales") or 0)) >= VENDAS_LOJA_COMUM_ML:
         return 4
     return None
 
