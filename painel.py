@@ -572,9 +572,13 @@ def cmd_zapcanal(args):
 
 # ---------- Bot B: observa canais de outros afiliados no WhatsApp (observador.py) ----------
 
-def _canais(bot):
-    caminho = arquivo_do_bot(bot, observador.ARQUIVO)
-    return caminho, observador.carregar(caminho)
+def _canais(bot=None):
+    # (09/11) Os canais observados valem para todos os bots: lê a soma de todas as listas e grava na comum
+    return observador.caminho_todos(PASTA_BOTS), observador.carregar_todos(PASTA_BOTS)
+
+def _sem_bot(args):
+    # "/zapobservar casa LINK" ainda funciona (o nome do bot é ignorado: vale para todos)
+    return args[1:] if args and args[0].lower() in bots() else args
 
 def _ler_canal(canal, quantas=50):
     # canal = {"id": ..., "convite": ...}: o servidor tenta pelo id (seguindo o canal) e pelo convite
@@ -605,16 +609,18 @@ def _mensagens_do_canal(canal):
 
 def _cmd_observar(oficial):
     def comando(args):
-        bot, resto = qual_bot(args)
+        resto = _sem_bot(args)
         if not resto:
             raise ValueError("Mande o link do canal. Ex.: /zapobservar https://whatsapp.com/channel/XXXX")
         convite = resto[0].rstrip('/').split('/')[-1]
         r = zap(f"/canal?convite={urllib.parse.quote(convite)}")
         if not r.get("id"):
             raise ValueError(r.get("erro") or "Não achei o canal por esse link.")
-        caminho, dados = _canais(bot)
-        novo = observador.adicionar_canal(dados, r["id"], r.get("nome"), convite, oficial)
-        observador.salvar(caminho, dados)
+        caminho, todos = _canais()
+        novo = not any(c["id"] == r["id"] for c in todos["canais"])
+        comum = observador.carregar(caminho)
+        observador.adicionar_canal(comum, r["id"], r.get("nome"), convite, oficial)
+        observador.salvar(caminho, comum)
         nome = html.escape(r.get("nome") or "?")
         try:
             lidas = _ler_canal({"id": r["id"], "convite": convite}, 20)["mensagens"]
@@ -633,8 +639,7 @@ cmd_zapobservar = _cmd_observar(False)
 cmd_zapoficial = _cmd_observar(True)
 
 def cmd_zapobservados(args):
-    bot, _ = qual_bot(args)
-    _, dados = _canais(bot)
+    _, dados = _canais()
     if not dados["canais"]:
         return "Nenhum canal observado ainda. Mande /zapobservar LINK_DO_CANAL"
     leituras = _leituras()
@@ -654,21 +659,19 @@ def cmd_zapobservados(args):
             estado = "ainda não lido (a 1ª leitura sai em até uns 20 min)"
         linhas.append(f"• {'⭐ ' if c.get('oficial') else ''}{html.escape(c['nome'])}\n"
                       f"  {estado}\n  <code>{html.escape(c['id'])}</code>")
-    return "<b>Canais que o Bot B observa (24 h)</b>\n" + "\n".join(linhas) + "\n\nPara tirar: /zapnaoobservar ID"
+    return ("<b>Canais observados (valem para todos os bots, 24 h)</b>\n" + "\n".join(linhas)
+            + "\n\nPara tirar: /zapnaoobservar ID")
 
 def cmd_zapnaoobservar(args):
-    bot, resto = qual_bot(args)
-    caminho, dados = _canais(bot)
-    if not resto or not observador.tirar_canal(dados, resto[0]):
+    resto = _sem_bot(args)
+    if not resto or not observador.tirar_de_todos(PASTA_BOTS, resto[0]):
         raise ValueError("Não achei esse id. Veja /zapobservados")
-    observador.salvar(caminho, dados)
-    return "✅ Tirei da observação."
+    return "✅ Tirei da observação (de todos os bots)."
 
 def cmd_zapmaisvistos(args):
     if any("whatsapp.com/channel" in a for a in args):     # mandou um link aqui: é para observar esse canal
         return cmd_zapobservar(args)
-    bot, _ = qual_bot(args)
-    _, dados = _canais(bot)
+    _, dados = _canais()
     if not dados["canais"]:
         return "Nenhum canal observado ainda. Mande /zapobservar LINK_DO_CANAL"
     todos, avisos = [], []

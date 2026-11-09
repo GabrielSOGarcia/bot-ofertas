@@ -169,10 +169,25 @@ def verificar(cfg, pasta_bot, whatsapp_url="http://127.0.0.1:3010"):
                                "(o histórico não abre: " + str(lido["erro"])[:60] + ")")
             return False, f"sem leitura nova há mais de {LEITURA_VELHA_HORAS} h"
         return conferir
+    # (09/11) Os canais observados valem para todos os bots (a soma das listas de bots/*/)
     try:
-        canais = json.load(open(os.path.join(pasta_bot, "canais_observados.json"), encoding="utf-8")).get("canais", [])
-    except (OSError, ValueError):
+        import observador
+        canais = observador.carregar_todos(os.path.dirname(os.path.abspath(pasta_bot)))["canais"]
+    except Exception:
         canais = []
+    # E os grupos dos outros afiliados em que o chip está (o programa do WhatsApp guarda o que eles postam)
+    def grupos():
+        caminho = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(pasta_bot))), "whatsapp",
+                               "grupos_observados.json")
+        dados = json.load(open(caminho, encoding="utf-8"))
+        desde = time.time() - 24 * 3600
+        ativos = {(g.get("nome") or j) for j, g in dados.items()
+                  if any((p.get("quando") or 0) >= desde for p in g.get("posts") or [])}
+        posts = sum(1 for g in dados.values() for p in g.get("posts") or [] if (p.get("quando") or 0) >= desde)
+        if not ativos:
+            return False, "nenhum post dos grupos dos outros nas últimas 24 h"
+        return True, f"{len(ativos)} grupos, {posts} posts nas últimas 24 h ({', '.join(sorted(ativos))[:150]})"
+    resultados.append(_tentar("Observando grupos", grupos))
     if canais:
         try:
             leituras = _pegar(whatsapp_url + "/canal/leituras", timeout=10).get("leituras", {})

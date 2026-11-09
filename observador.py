@@ -5,6 +5,40 @@
 import json, re, statistics
 
 ARQUIVO = "canais_observados.json"     # dentro da pasta de cada bot: {"canais": [{id, nome}], "lidas": {...}}
+# (09/11, Gabriel: "quero que todo canal meu observe a concorrência, já criado observando") Os canais
+# observados valem para TODOS os bots: a lista comum fica em bots/_todos/ (o painel ignora pastas com "_",
+# o whatsapp/servidor.js lê bots/*/canais_observados.json, então lê esta também). As listas antigas de cada
+# bot continuam valendo (somam).
+PASTA_TODOS = "_todos"
+import os
+
+def carregar_todos(pasta_bots):
+    # Todos os canais observados, de todas as pastas de bots/ (sem repetir)
+    dados = {"canais": []}
+    try:
+        pastas = sorted(os.listdir(pasta_bots))
+    except OSError:
+        return dados
+    for p in pastas:
+        for c in carregar(os.path.join(pasta_bots, p, ARQUIVO))["canais"]:
+            if not any(x["id"] == c["id"] for x in dados["canais"]):
+                dados["canais"].append(c)
+    return dados
+
+def caminho_todos(pasta_bots):
+    os.makedirs(os.path.join(pasta_bots, PASTA_TODOS), exist_ok=True)
+    return os.path.join(pasta_bots, PASTA_TODOS, ARQUIVO)
+
+def tirar_de_todos(pasta_bots, canal_id):
+    tirou = False
+    for p in os.listdir(pasta_bots):
+        caminho = os.path.join(pasta_bots, p, ARQUIVO)
+        if os.path.exists(caminho):
+            dados = carregar(caminho)
+            if tirar_canal(dados, canal_id):
+                salvar(caminho, dados)
+                tirou = True
+    return tirou
 
 def carregar(caminho):
     try:
