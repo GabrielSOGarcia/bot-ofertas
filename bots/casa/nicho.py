@@ -24,7 +24,7 @@ CASA_MAIS = [
     ("cozinha prática", ["cozedor de ovos elétrico", "nicho porta tempero", "kit utensílios de silicone",
                          "forma de gelo de silicone", "bomba elétrica para galão", "cesto de roupa suja"]),
     ("quintal e jardim", ["mangueira mágica", "mangueira expansível", "tela de sombreamento"]),
-    # 08/11: posts "A CASA TE POUPA" que o Gabriel mandou (8 mil curtidas): cozinha e lavanderia organizadas
+    # 08/11: posts de referência que o Gabriel mandou (8 mil curtidas): cozinha e lavanderia organizadas
     ("galheteiro e porta detergente", ["galheteiro de vidro", "kit galheteiro azeite e vinagre", "galheteiro",
                                        "dispenser de detergente com suporte para esponja", "porta detergente com esponja",
                                        "porta detergente e esponja"]),
@@ -62,7 +62,7 @@ PESO_CATEGORIA = {"capa de sofá": 3, "protetor e manta de sofá": 2, "sabonete 
                   # 08/11: as primeiras vendas (07/11): ducha higiênica 3x, garrafa térmica, jogo americano e
                   # suporte de notebook. O bot também aprende sozinho com o relatório (ver "Aprende com as vendas")
                   "chuveiro e ducha": 2, "garrafa térmica": 2, "mesa posta": 2, "escritório": 2,
-                  # 08/11: posts "A CASA TE POUPA" e mercado em promoção
+                  # 08/11: posts de referência e mercado em promoção
                   "galheteiro e porta detergente": 2, "porta pão e boleira": 2, "potes e temperos de vidro": 2,
                   "pano de prato": 2, "lavanderia organizada": 2, "azeite e vinagre de marca": 2,
                   "limpeza em galão": 2, "bucha e esponja em pacote": 2}
