@@ -2,6 +2,10 @@
 
 Bot que encontra ofertas na Shopee e publica automaticamente em canais do Telegram e grupos do WhatsApp, com link de afiliado. Roda 24h num servidor Linux e é controlado por um painel no próprio Telegram.
 
+## Sobre o projeto
+
+Comecei este projeto com uma ideia de renda extra usando links de afiliado da Shopee. Com a ajuda da IA, fui corrigindo, melhorando e aprimorando aos poucos, e hoje ele está como descrito abaixo. O projeto continua em andamento: a próxima etapa é levar o bot para o Mercado Livre.
+
 ## O que ele faz
 
 - **Busca de ofertas**: consulta a API de afiliados da Shopee (GraphQL, requisições assinadas com SHA-256) por listas de palavras-chave de cada nicho e filtra por desconto mínimo, avaliação, marca e comissão.
