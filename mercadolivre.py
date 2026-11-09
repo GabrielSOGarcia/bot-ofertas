@@ -57,8 +57,11 @@ class SessaoML:
 
     def _guardar(self):
         # Cookies renovados de volta no arquivo (a sessão continua viva); falhar aqui não para o bot
+        # (2 bots usam a mesma sessão: grava num temporário e troca de uma vez, para o arquivo nunca ficar pela metade)
         try:
-            self.jar.save(ignore_discard=True, ignore_expires=True)
+            temporario = f"{self.arquivo}.{os.getpid()}.tmp"
+            self.jar.save(temporario, ignore_discard=True, ignore_expires=True)
+            os.replace(temporario, self.arquivo)
         except OSError:
             pass
 
@@ -77,9 +80,11 @@ class SessaoML:
             self.entrar()                       # código de segurança venceu: pega outro e tenta 1 vez
             return json.loads(self._pedir(BASE + caminho, corpo))
 
-    def buscar(self, termo, offset=0):
+    def buscar(self, termo, offset=0, filtros=()):
+        # filtros da vitrine: "best_seller" (Mais vendidos) e "extra_commission" (Ganhos extras)
         resp = self._api("/affiliate-program/api/hub/search?is_affiliate=true&device=desktop",
-                         {"search": termo, "sort": "relevance", "filters": [], "offset": offset})
+                         {"search": termo, "sort": "relevance", "offset": offset,
+                          "filters": [{"id": f, "value": True} for f in filtros]})
         return [ler_card(c) for c in resp["polycard_client_model"]["polycards"]]
 
     def vendedor(self, card):

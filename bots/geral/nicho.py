@@ -845,6 +845,55 @@ CHAMADAS_POR_TIPO = CHAMADAS_POR_TIPO + [
     (["kit presente"], ["🎁 PRESENTE CERTEIRO"]),
 ]
 
+# ---------- 09/11, Gabriel: achados fortes no Geral ----------
+# "Você não acha as promoções desse jeito: Dolce Gusto por 295, frigobar Hisense por 683, forno de embutir por
+# 640... produto muito popular, com muita comissão". Essas ofertas são de loja grande, não da Shopee: estas buscas
+# vão na VITRINE DE AFILIADOS DO MERCADO LIVRE (a mesma sessão do bot de perfume), juntando a busca normal com os
+# MAIS VENDIDOS dela. Passam pelos mesmos filtros (marca, desconto, nota, vendas) e pela escada de lojas do
+# Mercado Livre (oficial da marca > lojas grandes > oficiais/MercadoLíder > comum muito bem avaliada).
+ACHADOS_ML = [
+    ("achado: eletroportátil", ["cafeteira dolce gusto", "cafeteira nespresso", "cafeteira expresso", "air fryer",
+                                "liquidificador", "aspirador de pó vertical", "robô aspirador", "panela elétrica"]),
+    ("achado: eletrodoméstico", ["frigobar", "forno de embutir", "forno elétrico", "micro-ondas", "cooktop",
+                                 "lava e seca", "geladeira frost free", "ar condicionado split", "smart tv"]),
+    ("achado: tecnologia", ["smartphone samsung galaxy", "smartphone motorola", "iphone", "fone jbl",
+                            "caixa de som jbl", "smartwatch samsung", "notebook", "monitor gamer", "kindle",
+                            "echo dot", "fire tv stick", "câmera de segurança wifi", "console playstation 5"]),
+    ("achado: ferramenta", ["parafusadeira", "furadeira de impacto", "lavadora de alta pressão", "jogo de chaves",
+                            "serra tico tico", "esmerilhadeira"]),
+    ("achado: suplemento", ["creatina 1kg", "whey protein 900g", "pasta de amendoim 1kg"]),
+    ("♀ achado: beleza", ["la roche posay", "elseve óleo extraordinário", "secador de cabelo taiff",
+                          "escova secadora", "chapinha babyliss", "protetor solar facial", "sérum vitamina c"]),
+    ("♀ achado: casa", ["jogo de panelas tramontina", "aparelho de jantar", "jogo de toalhas", "jogo de cama",
+                        "garrafa térmica stanley", "copo stanley"]),
+]
+_achados = {b for _, bs in ACHADOS_ML for b in bs}
+PALAVRAS = {c: [p for p in l if p not in _achados] for c, l in PALAVRAS.items()}   # a busca fica só no ML
+CAROS = [p for p in CAROS if p not in _achados]
+for _cat, _buscas in ACHADOS_ML:
+    PALAVRAS[_cat] = _buscas
+    TIPOS_PROPRIOS = TIPOS_PROPRIOS + _buscas
+    PESO_CATEGORIA[_cat] = 3 if _cat in ("achado: eletroportátil", "achado: eletrodoméstico",
+                                         "achado: tecnologia") else 2
+CATEGORIAS_EXTRA = [(c, [_sem_acento(b) for b in bs]) for c, bs in ACHADOS_ML] + CATEGORIAS_EXTRA
+BUSCAS_ML = sorted(_achados)
+MARCAS = MARCAS + ["Hisense", "Midea", "The Black Tools", "Vonder", "Wap", "Intelbras", "Nespresso", "Nescafé",
+                   "Oster", "Cadence", "Gallant", "Hamilton Beach", "Tramontina", "Stanley", "Taiff", "Babyliss",
+                   "La Roche-Posay", "La Roche Posay", "Max Titanium", "Integralmedica"]
+
+# ---------- 09/11, Gabriel: "no geral pode parar de mandar perfume: agora vai pro grupo de perfume" ----------
+_PERFUME = re.compile(r"perfume(?! capilar)|body splash|body mist|body spray|col[oô]nia|parfum|toilette|lattafa|"
+                      r"\basad\b|club de nuit|malbec|kaiak|quasar|egeo|floratta|\blily\b|glamour|essencial|"
+                      r"\bluna\b|kriska|il[ií]a|humor|\buna\b|far away|attraction|surreal|300 km|\barbo\b|uomini|"
+                      r"carolina herrera|lanc[oô]me|good girl|natura homem|coffee (wo)?man|elys[eé]e|"
+                      r"botic[aá]rio feminino|botic[aá]rio masculino", re.I)
+PALAVRAS = {c: [b for b in bs if not _PERFUME.search(b)] for c, bs in PALAVRAS.items()}
+PALAVRAS = {c: bs for c, bs in PALAVRAS.items() if bs}
+CAROS = [b for b in CAROS if not _PERFUME.search(b)]
+BLOQUEADAS = BLOQUEADAS + ["perfume", "perfumes", "body splash", "body mist", "colônia", "deo colônia",
+                           "eau de parfum", "eau de toilette", "deo parfum", "parfum"]
+BLOQUEIO_EXCETO = dict(BLOQUEIO_EXCETO, perfume=["capilar"])   # perfume de cabelo continua
+
 # ---------- Mensagem dos grupos ----------
 # Os 2 grupos, com o deste bot primeiro (o Casa lista na ordem contrária)
 GRUPOS = [("🔗 Achadinhos & Promoções", "https://chat.whatsapp.com/CONVITE_DO_GRUPO_GERAL"),

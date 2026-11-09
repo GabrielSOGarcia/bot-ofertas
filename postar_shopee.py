@@ -965,6 +965,7 @@ CONFIG_PATH = os.environ.get("BOT_CONFIG", r"C:\bot-config\config.txt")   # senh
 LOJA = "shopee"
 COMBINA_EM_QUALQUER_LUGAR = False   # True: a busca combina se os termos aparecem em qualquer parte do nome
 SINONIMOS_BUSCA = {}                # {"perfume": ["parfum", "colonia"...]}: termo da busca que vale por outro no nome
+BUSCAS_ML = []                      # (Geral) buscas que vão no Mercado Livre em vez da Shopee (achados fortes)
 # ===========================================================
 
 # ================= QUAL BOT =================
@@ -1113,11 +1114,21 @@ def sessao_ml():
             raise ErroShopee(f"sessão do Mercado Livre: {e}")
     return _sessao_ml["s"]
 
+def eh_busca_ml(termo):
+    # (09/11) Bot da Shopee com algumas buscas no Mercado Livre (BUSCAS_ML do nicho; vale também "busca + marca")
+    t = normalizar(termo)
+    return any(t == normalizar(b) or t.startswith(normalizar(b) + " ") for b in BUSCAS_ML)
+
 def buscar_mercadolivre(termo):
     import mercadolivre
-    time.sleep(PAUSA_ENTRE_BUSCAS)
+    time.sleep(max(PAUSA_ENTRE_BUSCAS, 1.5))
     try:
-        return [mercadolivre.para_oferta(c) for c in sessao_ml().buscar(termo)]
+        achados = sessao_ml().buscar(termo)
+        if LOJA != "mercadolivre":             # no Geral: + os MAIS VENDIDOS dessa busca (o popular de verdade)
+            time.sleep(1.5)
+            vistos = {c["id"] for c in achados}
+            achados += [c for c in sessao_ml().buscar(termo, filtros=["best_seller"]) if c["id"] not in vistos]
+        return [mercadolivre.para_oferta(c) for c in achados]
     except mercadolivre.SessaoCaiu as e:
         _sessao_ml["s"] = None                 # na próxima busca tenta abrir de novo (e avisa se não der)
         raise ErroShopee(f"sessão do Mercado Livre: {e}")
@@ -1125,7 +1136,7 @@ def buscar_mercadolivre(termo):
 def buscar_com_repeticao(termo):
     # Busca normal + por comissão. Se a Shopee responder "System Error" (falha passageira),
     # espera um pouco e tenta de novo (até 2 vezes) antes de desistir daquela palavra.
-    if LOJA == "mercadolivre":
+    if LOJA == "mercadolivre" or eh_busca_ml(termo):
         return buscar_mercadolivre(termo)
     for tentativa in range(3):
         try:
@@ -1892,7 +1903,7 @@ def montar_texto(p, chamada, canal="telegram", link=None):
     nome = p.get("nome_post") or nome_curto(p["productName"]) or p["productName"]
     texto = f"{esc(chamada)}\n\n{e['negrito'].format(esc(nome))}\n\n"
     if estado_campanha["fase"] == "dia":           # selo da campanha (11.11, Black Friday, 12.12) em cima do post
-        loja_nome = "MERCADO LIVRE" if LOJA == "mercadolivre" else "SHOPEE"
+        loja_nome = "MERCADO LIVRE" if p.get("loja") == "mercadolivre" else "SHOPEE"
         texto = e["negrito"].format(esc(f"🛍️ {estado_campanha['nome']} {loja_nome}")) + "\n" + texto
     if MOSTRAR_BENEFICIO and p.get("beneficio"):   # frase da IA: para que serve / por que é bom
         texto += f"{esc(p['beneficio'])}\n\n"
