@@ -38,12 +38,16 @@ GRUPOS = [(NOME_GRUPO_PERFUME, LINK_GRUPO_PERFUME), (NOME_GRUPO_CASA, LINK_GRUPO
 FRASES_GRUPO = {
     "dia": ["🌸 Bom dia cheiroso: perfume famoso, árabe e nacional com desconto de verdade, só de loja boa.",
             "✨ Começa o dia perfumado! Separamos os perfumes que estão com o melhor preço hoje."],
-    "tarde": ["💎 Tarde perfumada: Sauvage, 1 Million, Good Girl, árabes... confere os que baixaram de preço hoje.",
+    "tarde": ["💎 Tarde perfumada: 1 Million, Invictus, Le Male, árabes... confere os que baixaram de preço hoje.",
               "🎁 Perfume é presente que nunca erra: olha as promoções de hoje e já garante o seu (ou o de alguém)."],
     "noite": ["🌙 Noite de promoção: os perfumes mais desejados com desconto, antes que o preço volte.",
               "😍 Fixação que todo mundo elogia, pagando bem menos: confere os perfumes de hoje aqui no grupo."],
 }
-WHATSAPP_MAX_DIA = 40         # o chip é o mesmo do Casa e do Geral: começa devagar
+# 09/11 17h, Gabriel: "diminui o tempo do perfume: mínimo 6, máximo 12" (cada post sai entre 6 e 12 min depois
+# do anterior). Das 8h à meia-noite isso dá uns 100 posts, então o máximo do dia sobe para 100.
+WHATSAPP_INTERVALO = 6
+WHATSAPP_INTERVALO_MAX = 12
+WHATSAPP_MAX_DIA = 100
 MAX_PALAVRAS_NOME = 8         # "Perfume Árabe Al Wataniah Sabah Al Ward" (a linha + a marca precisam caber)
 MAX_PALAVRAS_RODADA = 15     # buscas no Mercado Livre por rodada (com calma, é a sessão do Gabriel)
 PAUSA_ENTRE_BUSCAS = 2
