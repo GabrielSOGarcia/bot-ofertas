@@ -896,5 +896,14 @@ BLOQUEIO_EXCETO = dict(BLOQUEIO_EXCETO, perfume=["capilar"])   # perfume de cabe
 
 # ---------- Mensagem dos grupos ----------
 # Os 2 grupos, com o deste bot primeiro (o Casa lista na ordem contrária)
-GRUPOS = [("🔗 Achadinhos & Promoções", "https://chat.whatsapp.com/CONVITE_DO_GRUPO_GERAL"),
-          ("🏠 Achadinhos de Casa", "https://chat.whatsapp.com/CONVITE_DO_GRUPO_CASA")]
+GRUPOS = [(NOME_GRUPO_GERAL, LINK_GRUPO_GERAL), (NOME_GRUPO_CASA, LINK_GRUPO_CASA),
+          (NOME_GRUPO_PERFUME, LINK_GRUPO_PERFUME)]
+# A frase depois do "Bom dia/Boa tarde/Boa noite", no contexto do Geral (09/11)
+FRASES_GRUPO = {
+    "dia": ["🔥 Bom dia com achado bom: tecnologia, eletro, beleza, treino e muito mais com preço que não dá pra ignorar.",
+            "📱 O dia começou e as promoções também: celular, fone, cafeteira, creatina... tudo com desconto de verdade."],
+    "tarde": ["⚡ Tarde de promoção: separamos os achados que mais valem a pena hoje, de marca e com desconto.",
+              "🛒 Tá precisando de alguma coisa? Dá uma olhada nos achados de hoje antes de comprar em outro lugar."],
+    "noite": ["🌙 À noite saem as melhores ofertas: confere os achados de hoje antes que o preço volte.",
+              "😱 Tem achado que não dura até amanhã: aproveita os de hoje aqui no grupo."],
+}

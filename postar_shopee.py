@@ -796,13 +796,25 @@ PASTA_OBSIDIAN = os.environ.get("BOT_OBSIDIAN",   # no servidor: BOT_OBSIDIAN=""
                                 "")  # "" desliga
 # Mensagem dos grupos: sai sozinha (não no fim do post), com saudação do horário e um link
 # por grupo. Lista vazia = mensagem desligada. Ex.: ("🏠 Casa (WhatsApp)", "https://...")
-GRUPOS = [
-    ("🏠 Achadinhos de Casa", "https://chat.whatsapp.com/CONVITE_DO_GRUPO_CASA"),
-    ("🔗 Achadinhos & Promoções", "https://chat.whatsapp.com/CONVITE_DO_GRUPO_GERAL"),   # o bot Geral (06/11)
-]
-GRUPOS_MIN = 15        # a mensagem dos grupos sai a cada 15 posts (90 por dia = 6 vezes)...
+GRUPOS_MIN = 15       # a mensagem dos grupos sai a cada 15 posts (90 por dia = 6 vezes)...
 GRUPOS_MAX = 15        # ...(MIN = MAX: sempre 15; para sortear, ex.: 15 e 22)
 SAUDACOES = [(0, 12, "☀️ BOM DIAAA!!"), (12, 18, "🌤️ BOA TARDEEE!!"), (18, 24, "🌙 BOA NOITEEE!!")]
+# (09/11) Frase do grupo depois da saudação, no contexto de cada grupo (o nicho.py de cada bot troca).
+# Uma é sorteada por vez: {"dia": [...], "tarde": [...], "noite": [...]}
+FRASES_GRUPO = {
+    "dia": ["☕ Café passado e casa arrumada: hoje tem achadinho pra deixar o seu cantinho mais lindo gastando pouco.",
+            "🏠 Começando o dia com os achadinhos de casa que mais valem a pena: cozinha, banheiro, quarto e sala."],
+    "tarde": ["🛋️ Pausa pro café? Aproveita e dá uma olhada nos achadinhos de casa de hoje, tem coisa boa demais.",
+              "🧺 Organizar a casa fica mais fácil (e mais barato) com os achadinhos que separamos pra você."],
+    "noite": ["🌙 Casa em silêncio, hora de garimpar: os melhores achadinhos de casa do dia estão aqui no grupo.",
+              "🛏️ Antes de dormir, confere os achadinhos de casa de hoje. Amanhã pode não ter mais nesse preço!"],
+}
+# Os grupos (nome, link). Cada bot põe o dele primeiro. Link vazio = ainda não tem: fica de fora da mensagem
+NOME_GRUPO_CASA, LINK_GRUPO_CASA = "🏠 Achadinhos de Casa", "https://chat.whatsapp.com/CONVITE_DO_GRUPO_CASA"
+NOME_GRUPO_GERAL, LINK_GRUPO_GERAL = "🔗 Achadinhos & Promoções", "https://chat.whatsapp.com/CONVITE_DO_GRUPO_GERAL"
+NOME_GRUPO_PERFUME, LINK_GRUPO_PERFUME = "💎 Perfumes em Promoção", ""   # 09/11: o Gabriel manda o link
+GRUPOS = [(NOME_GRUPO_CASA, LINK_GRUPO_CASA), (NOME_GRUPO_GERAL, LINK_GRUPO_GERAL),
+          (NOME_GRUPO_PERFUME, LINK_GRUPO_PERFUME)]
 ARQUIVO_GRUPOS = "mensagem_grupos.txt"
 ARQUIVO_POSTADOS = "postados.txt"
 SEM_REPETIR = 15       # palavra e tipo de produto não se repetem nos últimos 15 posts
@@ -1681,7 +1693,9 @@ def texto_grupos(canal="telegram"):
                    "ou manda pra família e pros amigos:\n\n")
     else:
         convite = "📲 Manda o link do grupo pra família e pros amigos aproveitarem também:\n\n"
-    texto = f"{e['negrito'].format(esc(saudacao))}\n\n"
+    periodo = "dia" if hora < 12 else "tarde" if hora < 18 else "noite"
+    frase = random.choice(FRASES_GRUPO.get(periodo) or [""])
+    texto = f"{e['negrito'].format(esc(saudacao))}\n\n" + (f"{esc(frase)}\n\n" if frase else "")
     if linha_campanha():                           # 11.11, Black Friday, 12.12 (no dia e na véspera)
         texto += e["negrito"].format(esc(linha_campanha())) + "\n\n"
     texto += convite
@@ -1706,7 +1720,7 @@ def texto_cupons(lista, canal="telegram"):
 def mandar_alerta_cupons():
     # Devolve True se mandou (ou se não tem cupom valendo, aí não tem o que mandar)
     lista = carregar_cupons()
-    if not lista:
+    if not lista or LOJA == "mercadolivre":     # cupom da Shopee não vai no grupo do Mercado Livre
         return True
     try:
         if TELEGRAM_POSTAR:
@@ -1748,7 +1762,7 @@ def contar_post_e_mandar_extras():
         if contagem >= alvo and enviar_mensagem_grupos(f"depois de {contagem} posts"):
             contagem, alvo = 0, random.randint(GRUPOS_MIN, GRUPOS_MAX)
         salvar_contagem(ARQUIVO_GRUPOS, contagem, alvo)
-    if carregar_cupons():
+    if carregar_cupons() and LOJA != "mercadolivre":   # os cupons são da Shopee: não vão no grupo de perfume
         contagem, alvo = ler_contagem(ARQUIVO_CONTAGEM_CUPONS, CUPONS_MIN, CUPONS_MAX)
         contagem += 1
         if contagem >= alvo and mandar_alerta_cupons():
@@ -1916,7 +1930,8 @@ def montar_texto(p, chamada, canal="telegram", link=None):
             antigo = float(p.get("precoAntes") or 0) or preco / (1 - desconto / 100)   # ML manda o "de" exato
             texto += f"De {e['riscado'].format('R$ ' + preco_br(antigo))}\n"
         texto += e["negrito"].format(f"Por R$ {preco_br(preco)}" + (" no Pix" if p.get("pixOnly") else "")) + "\n"
-    cupom, economia = cupons.melhor(carregar_cupons(), preco, CUPOM_DESCONTO_MINIMO)
+    cupom, economia = (cupons.melhor(carregar_cupons(), preco, CUPOM_DESCONTO_MINIMO)
+                       if p.get("loja") != "mercadolivre" else (None, 0))   # cupom da Shopee não vale no ML
     if cupom:
         texto += (f"🎟️ Com o cupom {e['codigo'].format(esc(cupom['codigo']))}: "
                   + e["negrito"].format(f"R$ {preco_br(preco - economia)}") + "\n")
