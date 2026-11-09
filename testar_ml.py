@@ -23,3 +23,7 @@ if __name__ == "__main__":
               f"{p['vendidos']}+ vendidos | comissão {p['comissao']}%")
     if "--link" in sys.argv and produtos:
         print("Link de afiliado do 1º:", ml.gerar_link(produtos[0]) or "a geração falhou")
+    if "--loja" in sys.argv:
+        for p in produtos[:3]:
+            v = ml.vendedor(p)
+            print(f"Loja de {p['nome'][:40]}: {v or getattr(ml, 'ultimo_problema', 'não li')}")

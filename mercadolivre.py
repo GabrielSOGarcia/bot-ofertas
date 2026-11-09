@@ -85,7 +85,8 @@ class SessaoML:
         resp = self._api("/affiliate-program/api/hub/search?is_affiliate=true&device=desktop",
                          {"search": termo, "sort": "relevance", "offset": offset,
                           "filters": [{"id": f, "value": True} for f in filtros]})
-        return [ler_card(c) for c in resp["polycard_client_model"]["polycards"]]
+        # busca sem resultado (marca fora da vitrine): a resposta vem sem a lista = nenhum produto, não é erro
+        return [ler_card(c) for c in (resp.get("polycard_client_model") or {}).get("polycards") or []]
 
     def vendedor(self, card):
         # Quem vende (o vendedor principal da página do produto, que é onde o link leva):
@@ -93,8 +94,10 @@ class SessaoML:
         if card["id"] in _vendedores:
             return _vendedores[card["id"]]
         html = self._pedir("https://" + card["url"].split("#")[0])
-        ev = re.search(r'"event_data":\{"seller_id":\d+,(.{0,600}?)\}', html)
+        ev = re.search(r'"event_data":\{"seller_id":\d+,(.{0,600}?)\}', html, re.S)
         if not ev:
+            self.ultimo_problema = (f"página do produto sem o vendedor ({len(html)} letras; "
+                                    f"{'pediu verificação' if 'verification' in html or 'captcha' in html.lower() else 'formato diferente'})")
             return None
         bloco = ev.group(1)
         def campo(nome):

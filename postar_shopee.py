@@ -2333,9 +2333,12 @@ VENDAS_LOJA_COMUM_ML = 5000   # loja comum: pelo menos +5 mil vendas (e reputaç
 def vendedor_ml(p):
     if "_vendedor" not in p:
         try:
-            p["_vendedor"] = sessao_ml().vendedor(p["_ml"])
+            s = sessao_ml()
+            p["_vendedor"] = s.vendedor(p["_ml"])
+            if p["_vendedor"] is None:
+                print(f"  Aviso: não li a loja de {p['productName'][:40]}: {getattr(s, 'ultimo_problema', '?')}")
         except Exception as e:
-            print(f"  Aviso: não consegui ver a loja de {p['productName'][:40]} ({type(e).__name__}).")
+            print(f"  Aviso: não consegui ver a loja de {p['productName'][:40]} ({type(e).__name__}: {str(e)[:80]}).")
             p["_vendedor"] = None
     return p["_vendedor"]
 
