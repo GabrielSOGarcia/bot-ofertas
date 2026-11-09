@@ -33,6 +33,10 @@ CASA_MAIS = [
     ("potes e temperos de vidro", ["potes de vidro com tampa de bambu", "kit potes de vidro tampa de bambu",
                                    "porta temperos de vidro com colher", "kit porta temperos com colher de bambu",
                                    "porta condimentos de vidro"]),
+    # 09/11: uma cliente que compra bastante pediu "bandeja de café, bonita, chique"
+    ("bandeja de café", ["bandeja de café", "bandeja com xícaras", "kit bandeja com xícaras", "bandeja espelhada",
+                         "bandeja de madeira para café", "bandeja dourada", "jogo de xícaras de café com pires",
+                         "kit café da manhã com bandeja", "bandeja de servir"]),
     ("pano de prato", ["kit pano de prato", "pano de prato de algodão", "kit panos de prato xadrez",
                        "pano de prato atoalhado"]),
     ("lavanderia organizada", ["dispenser de sabão em pó", "dispenser de amaciante", "kit potes para lavanderia",
@@ -65,7 +69,8 @@ PESO_CATEGORIA = {"capa de sofá": 3, "protetor e manta de sofá": 2, "sabonete 
                   # 08/11: posts de referência e mercado em promoção
                   "galheteiro e porta detergente": 2, "porta pão e boleira": 2, "potes e temperos de vidro": 2,
                   "pano de prato": 2, "lavanderia organizada": 2, "azeite e vinagre de marca": 2,
-                  "limpeza em galão": 2, "bucha e esponja em pacote": 2}
+                  "limpeza em galão": 2, "bucha e esponja em pacote": 2,
+                  "bandeja de café": 3}   # 09/11: pedido de cliente
 # Azeite e vinagre: só marca boa (como a panela só Tramontina). Galheteiro e porta azeite não precisam de marca
 MARCAS_POR_TIPO = MARCAS_POR_TIPO + [
     (["azeite", "azeite extra virgem", "azeite de oliva", "azeite português", "azeite trufado",
@@ -81,7 +86,12 @@ MARCA_OPCIONAL = MARCA_OPCIONAL + ["galheteiro", "porta azeite", "borrifador de 
                                    "porta detergente", "dispenser de detergente", "porta pão", "boleira",
                                    "pano de prato", "esponja mágica", "bucha multiuso", "porta temperos",
                                    "porta condimentos", "dispenser de sabão", "dispenser de amaciante",
-                                   "porta sabão líquido"]
+                                   "porta sabão líquido", "bandeja de café", "bandeja com xícaras",
+                                   "kit bandeja com xícaras", "bandeja espelhada", "bandeja de madeira para café",
+                                   "bandeja dourada", "kit café da manhã com bandeja", "bandeja de servir"]
+# Bandeja de café tem que ser bonita: cor sóbria na foto (sem rosa/laranja chamativo)
+COR_SOBRIA_EXTRA = COR_SOBRIA_EXTRA + ["bandeja"]
+CHAMADAS_POR_TIPO = CHAMADAS_POR_TIPO + [(["bandeja", "xícaras"], ["☕ CAFÉ CHIQUE EM CASA", "☕ PRA RECEBER COM CAFÉ"])]
 # Mercado só com promoção de verdade: azeite/vinagre 25%+ de desconto, limpeza em galão 20%+ (o resto 10%)
 DESCONTO_MINIMO_TIPO = [(["azeite", "vinagre balsâmico", "kit azeite"], 25),
                         (["detergente 5", "sabão líquido 5", "amaciante 5", "desinfetante 5", "lava roupas 5"], 20)]
