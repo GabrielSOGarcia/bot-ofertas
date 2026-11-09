@@ -440,7 +440,8 @@ def cmd_backup(args):
     return (f"🛟 Backup feito: <code>{html.escape(nome)}</code> ({tamanho:.1f} MB). Guardo os últimos "
             f"{BACKUP_DIAS} dias no servidor.\n\nPara baixar no PC (fica junto do config, porque tem a sessão do chip):\n"
             f"<code>cd C:\\bot-config; mkdir -Force backups; scp -i SUA_CHAVE.key "
-            f"USUARIO@IP_DO_SERVIDOR:~/backups-bot/{html.escape(nome)} backups\\</code>")
+            f"{html.escape(cfg.get('SERVIDOR', 'opc@IP-DO-SERVIDOR'))}:~/backups-bot/{html.escape(nome)} backups\\</code>")
+    # (09/11) o endereço do servidor vem do config (linha SERVIDOR=usuario@ip): o código está no GitHub público
 
 def destinos(bot):
     try:

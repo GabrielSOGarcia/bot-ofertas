@@ -19,3 +19,6 @@ PAINEL_ADMIN=000000000
 
 # Opcional: chave da API do Google Gemini (textos dos posts e leitura de cupons)
 GEMINI_KEY=SUA_CHAVE_DO_GEMINI
+
+# Opcional: usuário@IP do servidor, só para o /backup do painel mostrar o comando de baixar
+SERVIDOR=USUARIO@IP_DO_SERVIDOR
