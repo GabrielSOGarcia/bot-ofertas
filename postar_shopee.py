@@ -812,7 +812,7 @@ FRASES_GRUPO = {
 # Os grupos (nome, link). Cada bot põe o dele primeiro. Link vazio = ainda não tem: fica de fora da mensagem
 NOME_GRUPO_CASA, LINK_GRUPO_CASA = "🏠 Achadinhos de Casa", "https://chat.whatsapp.com/CONVITE_DO_GRUPO_CASA"
 NOME_GRUPO_GERAL, LINK_GRUPO_GERAL = "🔗 Achadinhos & Promoções", "https://chat.whatsapp.com/CONVITE_DO_GRUPO_GERAL"
-NOME_GRUPO_PERFUME, LINK_GRUPO_PERFUME = "💎 Cheiro de Rico | Perfumes", "https://chat.whatsapp.com/CONVITE_DO_GRUPO_PERFUME"
+NOME_GRUPO_PERFUME, LINK_GRUPO_PERFUME = "✈️ Duty Free Perfumes","https://chat.whatsapp.com/CONVITE_DO_GRUPO_PERFUME"
 GRUPOS = [(NOME_GRUPO_CASA, LINK_GRUPO_CASA), (NOME_GRUPO_GERAL, LINK_GRUPO_GERAL),
           (NOME_GRUPO_PERFUME, LINK_GRUPO_PERFUME)]
 ARQUIVO_GRUPOS = "mensagem_grupos.txt"

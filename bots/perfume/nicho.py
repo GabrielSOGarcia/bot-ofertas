@@ -138,7 +138,7 @@ MARCAS = MARCAS + [
 ]
 
 # ---------- Chamadas ----------
-CHAMADAS_GERAIS = ["🔥 ACHADO DO DIA", "👃 CHEIRO DE RICO GASTANDO POUCO", "😍 FIXAÇÃO QUE TODO MUNDO ELOGIA",
+CHAMADAS_GERAIS = ["🔥 ACHADO DO DIA", "👃 PERFUME DE GRIFE GASTANDO POUCO", "😍 FIXAÇÃO QUE TODO MUNDO ELOGIA",
                    "😱 ESSE PREÇO NÃO DURA", "🛒 QUEM VIU, LEVOU", "🎁 PRESENTE QUE ACERTA"]
 CHAMADAS_POR_TIPO = [
     (["árabe", "lattafa", "asad", "khamrah", "yara", "fakhar", "club de nuit", "alhambra", "wataniah",
