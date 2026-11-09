@@ -78,11 +78,15 @@ PERFUMES = [
     ("famoso masculino", ["sauvage eau de parfum", "sauvage dior", "1 million", "ultra male", "le male elixir",
                           "le male", "invictus", "eros versace", "stronger with you", "acqua di gio profumo",
                           "the most wanted azzaro", "azzaro wanted", "y yves saint laurent", "boss bottled",
-                          "212 vip men", "bleu de chanel", "phantom rabanne"]),
+                          "212 vip men", "bleu de chanel", "phantom rabanne", "armani code", "ck be",
+                          "jean paul gaultier masculino", "rabanne masculino"]),
     ("♀ famoso feminino", ["good girl carolina herrera", "very good girl", "212 vip rosé", "carolina herrera feminino",
                            "la vie est belle", "idôle lancôme", "olympea", "lady million", "fame rabanne",
                            "libre yves saint laurent", "scandal jean paul gaultier", "my way armani",
-                           "j'adore dior", "miss dior", "coco mademoiselle", "born in roma"]),
+                           "j'adore dior", "miss dior", "coco mademoiselle", "born in roma", "eternity calvin klein",
+                           "lancôme feminino", "jean paul gaultier feminino"]),
+    # (09/11: a vitrine de afiliados NÃO tem Dior, Chanel, Carolina Herrera, Versace, Azzaro, YSL... essas buscas
+    # voltam vazias e o bot passa para a próxima; ficam na lista caso a vitrine passe a ter)
     # 2º OS DUPES (cópias/inspirados e os árabes que imitam os famosos)
     ("dupe masculino", ["perfume inspirado masculino", "contratipo masculino", "perfume asad", "club de nuit intense",
                         "khamrah", "fakhar black", "maison alhambra masculino", "al wataniah masculino",
