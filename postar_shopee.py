@@ -3454,7 +3454,8 @@ def verificar_parado():
         ultimo = os.path.getmtime(ARQUIVO_HISTORICO)
     except OSError:
         ultimo = 0
-    parado = (time.time() - max(ultimo, inicio_hoje)) / 60
+    # (09/11) conta também a partir de quando o bot ligou: bot novo ligado às 15h não está "parado desde as 8h"
+    parado = (time.time() - max(ultimo, inicio_hoje, INICIO_BOT)) / 60
     limite = ALERTA_SEM_POST_MIN
     if not TELEGRAM_POSTAR:
         # só o WhatsApp recebe: o ritmo dele é mais lento, e depois do máximo do dia não há mais post
@@ -3496,6 +3497,7 @@ def preparar_pasta_bot():
     os.chdir(PASTA_BOT)
 
 preparar_pasta_bot()
+INICIO_BOT = time.time()
 print(f"Bot {BOT} rodando. Para parar: Ctrl+C")
 forcar = False
 ultima_verificacao = None
