@@ -19,7 +19,14 @@ TEXTO_MODELO_IA = (
 
 # ---------- Critérios ----------
 EXIGIR_MARCA_SEMPRE = False   # perfume é perfume: a garantia vem da loja (escada de lojas), não da marca
-DESCONTO_MINIMO = 15          # perfume com desconto de verdade (Natura a preço cheio não vai)
+DESCONTO_MINIMO = 20          # 09/11, Gabriel: "promoção boa, muito boa mesmo" (Natura a preço cheio não vai)
+# Pontuação dentro de cada busca (somam 1): desconto pesa mais que no Casa; o mais barato pesa pouco (o que
+# importa é o perfume famoso em promoção). Comissão, vendas e nota continuam. A loja vem antes (escada de lojas)
+PESO_DESCONTO = 0.3
+PESO_COMISSAO = 0.25
+PESO_VENDAS = 0.25
+PESO_NOTA = 0.15
+PESO_PRECO = 0.05
 VENDAS_MINIMAS = 500          # o Mercado Livre mostra "+500", "+1000", "+5mil"...
 VENDAS_MINIMAS_CARO = 50      # importado caro vende menos
 NOTA_MINIMA = 4.5
@@ -52,27 +59,44 @@ BLOQUEADAS = [b for b in BLOQUEADAS if b not in ("similar", "essência")] + [
 ]
 
 # ---------- O que buscar (substitui a lista do Casa inteira) ----------
-# Categorias "♀" = vez do feminino; as outras = vez do masculino (ALTERNAR_FEMININO)
+# 09/11 16h, Gabriel: "dá preferência pros perfumes mais conhecidos (Sauvage Dior Eau de Parfum, One Million,
+# Ultra Male; Carolina Herrera...). Depois pros dupes (as cópias). Seja masculino ou feminino."
+# Categorias "♀" = vez do feminino; as outras = vez do masculino (ALTERNAR_FEMININO: um ♀, um ♂).
+# O peso (PESO_CATEGORIA) faz a preferência: famosos 3 vezes por volta, dupes 2, nacionais e body splash 1.
 PERFUMES = [
-    ("perfume árabe masculino", ["perfume árabe masculino", "lattafa masculino", "perfume asad", "khamrah",
-                                 "club de nuit", "fakhar black", "maison alhambra", "al wataniah masculino"]),
+    # 1º OS FAMOSOS
+    ("famoso masculino", ["sauvage eau de parfum", "sauvage dior", "1 million", "ultra male", "le male elixir",
+                          "le male", "invictus", "eros versace", "stronger with you", "acqua di gio profumo",
+                          "the most wanted azzaro", "azzaro wanted", "y yves saint laurent", "boss bottled",
+                          "212 vip men", "bleu de chanel", "phantom rabanne"]),
+    ("♀ famoso feminino", ["good girl carolina herrera", "very good girl", "212 vip rosé", "carolina herrera feminino",
+                           "la vie est belle", "idôle lancôme", "olympea", "lady million", "fame rabanne",
+                           "libre yves saint laurent", "scandal jean paul gaultier", "my way armani",
+                           "j'adore dior", "miss dior", "coco mademoiselle", "born in roma"]),
+    # 2º OS DUPES (cópias/inspirados e os árabes que imitam os famosos)
+    ("dupe masculino", ["perfume inspirado masculino", "contratipo masculino", "perfume asad", "club de nuit intense",
+                        "khamrah", "fakhar black", "maison alhambra masculino", "al wataniah masculino",
+                        "perfume árabe masculino", "lattafa masculino"]),
+    ("♀ dupe feminino", ["perfume inspirado feminino", "contratipo feminino", "yara lattafa", "sabah al ward",
+                         "durrat al aroos", "fakhar rose", "maison alhambra feminino", "perfume árabe feminino",
+                         "lattafa feminino"]),
+    # 3º nacionais e body splash
     ("perfume nacional masculino", ["malbec", "kaiak", "natura homem", "quasar", "zaad", "egeo masculino",
                                     "essencial masculino", "uomini", "boticário masculino"]),
-    ("♀ perfume árabe feminino", ["perfume árabe feminino", "yara lattafa", "sabah al ward", "durrat al aroos",
-                                  "lattafa feminino", "fakhar rose", "maison alhambra feminino"]),
     ("♀ perfume nacional feminino", ["natura una", "essencial feminino", "lily boticário", "floratta",
                                      "egeo feminino", "glamour boticário", "ilía natura", "kriska",
                                      "boticário feminino"]),
     ("♀ body splash", ["body splash", "body splash victoria's secret", "body splash wepink"]),
 ]
 PALAVRAS = {c: bs for c, bs in PERFUMES}
-# Importados: a vez do "caro" (1 a cada poucos posts)
+for _c, _p in [("famoso masculino", 3), ("♀ famoso feminino", 3), ("dupe masculino", 2), ("♀ dupe feminino", 2)]:
+    PESO_CATEGORIA[_c] = _p
+# "Caro" (1 a cada poucos posts): os de luxo, além dos famosos que já estão na lista normal
 IMPORTADOS = [
-    ("perfume importado masculino", ["1 million", "invictus", "sauvage", "bleu de chanel", "212 vip men",
-                                     "eros versace", "acqua di gio", "le male", "polo ralph lauren",
-                                     "hugo boss masculino", "azzaro", "phantom", "stronger with you", "ck one"]),
-    ("♀ perfume importado feminino", ["good girl", "la vie est belle", "212 vip rosé", "olympea", "j'adore",
-                                      "coco mademoiselle", "idôle", "my way", "scandal", "lady million", "fame"]),
+    ("luxo masculino", ["bleu de chanel parfum", "sauvage elixir", "aventus creed", "tom ford masculino",
+                        "dior homme intense", "layton parfums de marly"]),
+    ("♀ luxo feminino", ["chanel n5", "coco mademoiselle chanel", "black opium", "delina parfums de marly",
+                         "tom ford feminino", "good girl supreme"]),
 ]
 CAROS = [b for _, bs in IMPORTADOS for b in bs]
 ALTERNAR_FEMININO = True
@@ -89,6 +113,7 @@ MARCAS = MARCAS + [
     "Azzaro", "Jean Paul Gaultier", "Lancôme", "Yves Saint Laurent", "YSL", "Dolce & Gabbana", "Hugo Boss",
     "Calvin Klein", "Ralph Lauren", "Montblanc", "Givenchy", "Prada", "Valentino", "Mugler", "Kenzo",
     "Antonio Banderas", "Benetton", "Victoria's Secret", "Ariana Grande", "Lacoste", "Diesel", "Ferrari",
+    "Creed", "Tom Ford", "Parfums de Marly", "Boss", "Sauvage", "1 Million", "Ultra Male", "Le Male", "Invictus",
     # árabes (marca e linhas famosas que aparecem sem a marca no título)
     "Lattafa", "Al Wataniah", "Maison Alhambra", "Armaf", "Afnan", "Rasasi", "Ajmal", "Al Haramain", "Orientica",
     "Fakhar", "Khamrah", "Asad", "Yara", "Club de Nuit", "Sabah Al Ward", "Durrat Al Aroos", "Badee Al Oud",
