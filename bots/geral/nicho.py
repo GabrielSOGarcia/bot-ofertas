@@ -101,14 +101,6 @@ PALAVRAS = {
         "legging", "legging fitness", "short fitness", "conjunto fitness", "top fitness", "macaquinho fitness",
         "garrafa de água motivacional", "tapete de yoga", "mini band", "bola de pilates", "tênis de academia feminino",
     ],
-    "f_bebe": [
-        "fralda", "fralda pampers", "fralda huggies", "lenço umedecido", "trocador portátil", "bolsa maternidade",
-        "mamadeira", "chupeta", "copo de transição", "babador", "body de bebê", "kit body bebê", "macacão bebê",
-        "saída maternidade", "sapatinho de bebê", "naninha", "móbile de berço", "kit berço", "sling",
-        "almofada de amamentação", "bomba tira leite", "banheira de bebê", "kit higiene bebê", "mordedor",
-        "chocalho", "tapete de atividades", "tapete de eva", "cercadinho", "andador infantil",
-        "cadeira de alimentação", "pomada para assaduras",
-    ],
     "f_casa_decor": [
         "vela aromática", "difusor de aromas", "home spray", "almofada decorativa", "manta para sofá",
         "tapete felpudo", "quadro decorativo", "vaso decorativo", "planta artificial", "espelho redondo",
@@ -131,14 +123,6 @@ PALAVRAS = {
         "amaciante", "lustra móveis", "dispenser de sabão em pó", "cesto de roupa", "varal de chão",
         "tábua de passar", "ferro de passar", "vaporizador de roupas", "lixeira automática",
         "aromatizador de ambiente", "rodo mágico",
-    ],
-    "f_infantil": [
-        "roupa infantil", "vestido infantil", "conjunto infantil", "pijama infantil", "tênis infantil",
-        "sandália infantil", "brinquedo educativo", "brinquedo montessori", "blocos de montar", "lego",
-        "quebra-cabeça infantil", "massinha de modelar", "boneca", "boneca reborn", "casinha de boneca",
-        "cozinha de brinquedo", "pelúcia", "slime", "kit pintura infantil", "livro infantil",
-        "brinquedo de banho", "jogo da memória", "mochila infantil", "lancheira infantil", "garrafinha infantil",
-        "piscina de bolinhas",
     ],
     # ===================== MASCULINO E GERAL =====================
     "celular": [
@@ -222,8 +206,8 @@ PALAVRAS = {
     ],
     "papelaria": [
         "caderno", "caderno inteligente", "caderno universitário", "fichário", "planner", "agenda 2027",
-        "kit canetas", "caneta gel", "marca texto", "post-it", "estojo", "mochila escolar", "lápis de cor",
-        "aquarela", "kit lettering", "washi tape", "calculadora", "organizador de mesa",
+        "kit canetas", "caneta gel", "marca texto", "post-it", "kit lettering", "washi tape", "calculadora",
+        "organizador de mesa",   # 09/11: sem estojo, mochila escolar, lápis de cor, aquarela (coisa de criança)
     ],
     "m_mais": [   # 06/11 noite: Gabriel pediu 50/50 ("também existe homem nesse mundo")
         "regata masculina", "regata dry fit", "camiseta dry fit", "camiseta oversized masculina",
@@ -288,10 +272,9 @@ CAROS = [
     "perfume carolina herrera", "perfume lancôme", "perfume good girl", "bolsa arezzo", "sandália schutz",
     "kit maquiagem profissional", "secador taiff", "escova rotativa philco", "kit skincare la roche posay",
     "smartwatch feminino samsung", "relógio feminino michael kors", "sapatênis feminino de couro",
-    # Esporte e bebê
+    # Esporte (09/11: sem os de bebê)
     "headphone sony", "smartwatch garmin", "tênis nike air max", "furadeira bosch", "parafusadeira makita",
-    "bicicleta ergométrica", "esteira elétrica", "bicicleta aro 29", "patinete elétrico", "carrinho de bebê",
-    "bebê conforto", "cadeirinha para carro", "berço", "babá eletrônica",
+    "bicicleta ergométrica", "esteira elétrica", "bicicleta aro 29", "patinete elétrico",
 ]
 
 # ---------- Marcas (somam às do Casa) ----------
@@ -316,9 +299,6 @@ MARCAS = MARCAS + [
     "Lupo", "Hope", "Liz", "Trifil", "Mormaii", "Speedo", "Oakley", "Ray-Ban", "Chilli Beans", "Samsonite",
     "Casio", "Technos", "Orient", "Mondaine", "Vivara", "Rommanel", "Arezzo", "Schutz", "Santa Lolla",
     "Moleca", "Beira Rio", "Vizzano", "Piccadilly", "Usaflex", "Dakota",
-    # Bebê e infantil
-    "MamyPoko", "Babysec", "Chicco", "Burigotto", "Galzerano", "Kiddo", "Lillo", "NUK", "Philips Avent",
-    "Avent", "Fisher-Price", "Lego", "Mattel", "Hot Wheels", "Barbie", "Hasbro", "Estrela", "Grow",
     # Pet
     "Pedigree", "Whiskas", "Golden", "Premier", "Royal Canin", "Special Dog", "GranPlus", "Chalesco",
     # Carro, moto e ferramentas
@@ -342,6 +322,28 @@ BLOQUEADAS = [b for b in BLOQUEADAS if b not in _LIBERADAS and b not in BLOQUEAD
     # 08/11, Gabriel: "relógio pirateado, caixona de ouro, não gostei"
     "rolex", "patek", "hublot", "audemars", "richard mille", "cartier", "bvlgari", "estilo luxo",
 ]
+
+# ---------- 09/11, Gabriel: NADA infantil no Geral ("sem brinquedo, sem canetinha, nada que é infantil...
+# sabonete infantil, banheira, cadeirinha, mamadeira") ----------
+INFANTIL = [
+    "infantil", "infantis", "criança", "crianças", "bebê", "bebês", "bebe", "baby", "kids", "kid", "juvenil",
+    "menino", "meninos", "menina", "meninas", "recém nascido", "recém-nascido", "newborn", "maternidade",
+    "gestante", "amamentação", "brinquedo", "brinquedos", "boneca", "bonecas", "boneco", "bonecos", "reborn",
+    "pelúcia", "lego", "blocos de montar", "massinha", "slime", "canetinha", "canetinhas", "hidrocor",
+    "giz de cera", "escolar", "fralda", "fraldas", "lenço umedecido", "lenços umedecidos", "mamadeira",
+    "chupeta", "mordedor", "chocalho", "babador", "naninha", "móbile", "berço", "cercadinho", "andador",
+    "cadeirinha", "banheira", "carrinho de bebê", "bebê conforto", "trocador", "body bebê", "pomada para assaduras",
+    "patrulha canina", "peppa", "turma da mônica", "galinha pintadinha", "mundo bita", "hot wheels", "barbie",
+    "fisher-price", "fisher price", "frozen", "homem aranha",
+]
+BLOQUEADAS = BLOQUEADAS + INFANTIL
+# O que tem a palavra mas não é de criança (brinquedo de pet, pantufa de pelúcia, Babyliss, baby doll...)
+BLOQUEIO_EXCETO = {
+    "brinquedo": ["cachorro", "gato", "pet", "cães", "caes"], "brinquedos": ["cachorro", "gato", "pet"],
+    "mordedor": ["cachorro", "gato", "pet"], "baby": ["liss", "doll"], "pelúcia": ["chinelo", "pantufa", "manta",
+    "cobertor", "almofada"], "banheira": ["cachorro", "gato", "pet"], "andador": ["idoso", "adulto"],
+    "cadeirinha": ["praia", "cachorro", "pet"], "boneco": ["funko"], "bonecos": ["funko"],
+}
 
 # ---------- 08/11: relógio e calçado só de marca; sapato de homem em cor sóbria ----------
 # Gabriel: "um sapato vermelho, feio pra caralho; um relógio pirateado... relógio coloca um pouquinho de marca,
@@ -495,19 +497,6 @@ CATEGORIAS_EXTRA = [
     ("♀ relógio e óculos", ["oculos de sol feminino", "relogio feminino", "oculo", "smartwatch feminino"]),
     ("♀ fitness", ["short fitness", "top fitness", "legging", "short fitnes", "conjunto fitness", "top fitnes", "macaquinho",
                    "garrafa de agua motivacional", "tapete de yoga", "mini band", "bola de pilates"]),
-    ("♀ fralda e higiene do bebê", ["pomada para assaduras", "fralda", "lenco umedecido", "trocador", "kit higiene bebe", "banheira",
-                                    "pomada"]),
-    ("♀ mamadeira e chupeta", ["mamadeira", "chupeta", "copo", "babador", "mordedor", "chocalho"]),
-    ("♀ roupa de bebê", ["macacao bebe", "body de bebe", "kit body bebe", "macacao bebe", "saida maternidade", "sapatinho"]),
-    ("♀ quarto do bebê", ["naninha", "mobile", "kit berco", "cercadinho", "tapete de atividades", "tapete de eva"]),
-    ("♀ maternidade", ["bolsa maternidade", "sling", "almofada", "bomba", "andador", "cadeira de alimentacao",
-                       "carrinho de bebe", "bebe", "cadeirinha para carro", "berco", "baba"]),
-    ("♀ roupa infantil", ["tenis infantil", "roupa infantil", "vestido infantil", "conjunto infantil", "pijama infantil",
-                          "teni infantil", "sandalia infantil"]),
-    ("♀ boneca e faz de conta", ["boneca", "casinha", "cozinha", "pelucia"]),
-    ("♀ brinquedo", ["brinquedo", "blocos de montar", "lego", "quebra", "massinha", "slime", "kit pintura",
-                     "livro", "jogo da memoria", "piscina"]),
-    ("♀ escola infantil", ["mochila infantil", "lancheira infantil", "garrafinha infantil"]),
     ("♀ casa: aroma", ["aromatizador de ambiente", "vela", "difusor de aromas", "home", "aromatizador"]),
     ("♀ casa: decoração", ["almofada decorativa", "manta", "tapete felpudo", "quadro", "vaso", "planta", "espelho redondo"]),
     ("♀ casa: luz", ["luminaria", "fita"]),
@@ -645,8 +634,6 @@ CHAMADAS_POR_TIPO = CHAMADAS_POR_TIPO + [
     (["sandália", "salto", "tênis feminino", "bota", "sapatilha", "chinelo"], ["👠 PÉ LINDO E CONFORTÁVEL"]),
     (["bolsa", "clutch", "carteira feminina"], ["👜 A BOLSA DO MOMENTO"]),
     (["brinco", "colar", "anel", "semijoias", "pulseira feminina"], ["💍 BRILHO NO LOOK"]),
-    (["fralda", "lenço umedecido", "mamadeira", "chupeta", "body de bebê", "bebê"], ["👶 PRA QUEM TEM BEBÊ EM CASA"]),
-    (["brinquedo", "lego", "boneca", "pelúcia", "quebra-cabeça", "massinha"], ["🧸 A CRIANÇADA VAI AMAR"]),
     (["cachorro", "gato", "pet", "coleira", "comedouro"], ["🐶 SEU PET VAI AMAR"]),
     (["halter", "academia", "yoga", "corda de pular", "elástico", "fitness", "legging"], ["💪 BORA TREINAR"]),
     (["automotivo", "carro", "veicular", "pneu", "moto", "capacete"], ["🚗 CARRO NOS TRINQUES"]),
@@ -745,7 +732,8 @@ CHAMADAS_POR_TIPO = CHAMADAS_POR_TIPO + [
 # muito cabo, carregador, iPhone, Samsung... cueca Lupo, Nike, Wilson, 100% algodão, roupa de treinar de
 # poliéster, masculino e feminino... creatina, Max, Growth... Curaprox, Boticário, Avon, Principia, kits".
 NICHO_IA = ("achadinhos e promoções da Shopee (público de homens e mulheres meio a meio: tecnologia, celular, "
-            "gadgets, suplemento, roupa e treino, beleza de marca, casa)")
+            "gadgets, suplemento, roupa e treino, beleza de marca, casa; NADA infantil: recuse brinquedo, roupa "
+            "infantil, produto de bebê ou criança, canetinha e material escolar)")
 # Como o Casa: produto de marca na frente; sem marca só se for muito bem avaliado (nota 4,7+ e 1000+ vendas)
 EXIGIR_MARCA_SEMPRE = True
 

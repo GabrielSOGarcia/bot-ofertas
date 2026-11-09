@@ -1154,8 +1154,12 @@ def bloqueado(nome, hoje=None):
     if (hoje or datetime.now().date()).month in (11, 12):
         tema = re.search(r"natal|natalin|ano novo|reveillon", nome)
         liberados = {normalizar(t) for t in LIBERADOS_FIM_DE_ANO if tema or t not in SO_COM_TEMA}
+    # (09/11) BLOQUEIO_EXCETO (nicho.py): {"brinquedo": ["cachorro", "gato"]} = bloqueia "brinquedo", menos o de pet
+    exceto = {normalizar(k): [normalizar(x) for x in v] for k, v in globals().get("BLOQUEIO_EXCETO", {}).items()}
+    def salvo(t):
+        return any(re.search(r"\b" + re.escape(x), nome) for x in exceto.get(t, []))
     return any(normalizar(t) not in liberados and re.search(r"\b" + re.escape(normalizar(t)) + r"\b", nome)
-               for t in BLOQUEADAS)
+               and not salvo(normalizar(t)) for t in BLOQUEADAS)
 
 def peca_de_outro(nome, palavra):
     # "Capa para Smart TV" na busca "capa de sofá": é coisa de outro aparelho, não posta
