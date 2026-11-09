@@ -18,6 +18,9 @@ NAVEGADOR = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTM
              "Chrome/130.0.0.0 Safari/537.36")
 
 
+_vendedores = {}   # id do anúncio -> vendedor (a página do produto é pesada: lê 1 vez por anúncio)
+
+
 class SessaoCaiu(Exception):
     """O Mercado Livre pediu login: os cookies precisam ser exportados de novo."""
 
@@ -78,6 +81,27 @@ class SessaoML:
         resp = self._api("/affiliate-program/api/hub/search?is_affiliate=true&device=desktop",
                          {"search": termo, "sort": "relevance", "filters": [], "offset": offset})
         return [ler_card(c) for c in resp["polycard_client_model"]["polycards"]]
+
+    def vendedor(self, card):
+        # Quem vende (o vendedor principal da página do produto, que é onde o link leva):
+        # {"nome", "oficial", "reputacao" ("5_green"...), "lider" ("platinum"/"gold"/""), "vendas", "full"}
+        if card["id"] in _vendedores:
+            return _vendedores[card["id"]]
+        html = self._pedir("https://" + card["url"].split("#")[0])
+        ev = re.search(r'"event_data":\{"seller_id":\d+,(.{0,600}?)\}', html)
+        if not ev:
+            return None
+        bloco = ev.group(1)
+        def campo(nome):
+            m = re.search(r'"%s":(?:"([^"]*)"|(\d+)|null)' % nome, bloco)
+            return (m.group(1) or m.group(2) or "") if m else ""
+        vendas = re.search(r'"text":"\+(\d+)\s*(mil)?\s*vendas"', html)
+        v = {"nome": json.loads(f'"{campo("seller_name")}"'), "oficial": bool(campo("official_store_id")),
+             "reputacao": campo("reputation_level"), "lider": campo("power_seller_status"),
+             "vendas": int(vendas.group(1)) * (1000 if vendas.group(2) else 1) if vendas else 0,
+             "full": '"logistic_type":"fulfillment"' in html[:ev.end() + 3000]}
+        _vendedores[card["id"]] = v
+        return v
 
     def gerar_link(self, card):
         corpo = {"itemId": card["produto"] or card["id"], "type": "product",

@@ -1912,7 +1912,9 @@ def montar_texto(p, chamada, canal="telegram", link=None):
     texto += "\n"
     vendidos = f"{vendas // 1000} mil+" if vendas >= 1000 else f"{vendas}+"
     texto += f"⭐ {nota:.1f}".replace(".", ",") + f" | {vendidos} vendidos\n"
-    if loja_oficial(p):
+    if p.get("loja") == "mercadolivre":
+        texto += (esc(selo_loja_ml(p)) + "\n") if selo_loja_ml(p) else ""
+    elif loja_oficial(p):
         texto += "✅ Loja Oficial Shopee\n"
     elif loja_indicada(p):
         texto += "✅ Loja Indicada Shopee\n"
@@ -2283,6 +2285,8 @@ def degrau_loja(p):
     # REGRA ÚNICA (06/11, decisão final): qualquer loja passa com nota 4,7+ e 1000+ vendas (conferidas nos
     # filtros de nota e vendas). O degrau só decide a PREFERÊNCIA quando a busca acha várias:
     # 1 Oficial, 2 Indicada, 3 comum com marca conhecida, 4 comum sem marca. None = loja recusada.
+    if p.get("loja") == "mercadolivre":
+        return degrau_loja_ml(p)
     if loja_oficial(p):
         return 1
     if LOJA_INDICADA and loja_indicada(p):
@@ -2290,6 +2294,54 @@ def degrau_loja(p):
     if not LOJA_COMUM_MARCA:                   # /lojacomum desliga: só Oficial e Indicada
         return None
     return 3 if marca_do_produto(p) else 4
+
+# (09/11, Gabriel, perfume do Mercado Livre) A escada de lojas: 1º a loja OFICIAL DA MARCA do perfume (Azzaro
+# vendendo Azzaro); 2º as lojas grandes (o próprio Mercado Livre, Sephora, Amazon...); 3º outras lojas oficiais e
+# as indicadas pelo Mercado Livre (MercadoLíder Platinum/Gold); 4º loja comum, só muito bem avaliada (reputação
+# verde) e com muitas vendas. O resto fica de fora.
+LOJAS_GRANDES_ML = ["Mercado Livre", "Sephora", "Amazon", "Época Cosméticos", "Beleza na Web", "The Beauty Box",
+                    "O Boticário", "Boticário", "Natura", "Eudora", "Avon", "Drogasil", "Droga Raia", "Magalu",
+                    "Magazine Luiza", "Americanas", "Carrefour", "Casas Bahia", "Netshoes", "Dafiti"]
+VENDAS_LOJA_COMUM_ML = 5000   # loja comum: pelo menos +5 mil vendas (e reputação verde)
+
+def vendedor_ml(p):
+    if "_vendedor" not in p:
+        try:
+            p["_vendedor"] = sessao_ml().vendedor(p["_ml"])
+        except Exception as e:
+            print(f"  Aviso: não consegui ver a loja de {p['productName'][:40]} ({type(e).__name__}).")
+            p["_vendedor"] = None
+    return p["_vendedor"]
+
+def degrau_loja_ml(p):
+    v = vendedor_ml(p)
+    if not v:
+        return None
+    nome = normalizar(v["nome"])
+    marca = normalizar(marca_do_produto(p) or "")
+    if v["oficial"] and marca and (marca in nome or nome in marca):
+        return 1
+    if any(re.search(r"(?<!\w)" + re.escape(normalizar(l)) + r"(?!\w)", nome) for l in LOJAS_GRANDES_ML):
+        return 2
+    if v["oficial"] or v["lider"] in ("platinum", "gold"):
+        return 3
+    if v["reputacao"] == "5_green" and v["vendas"] >= VENDAS_LOJA_COMUM_ML:
+        return 4
+    return None
+
+def selo_loja_ml(p):
+    # A linha de confiança do post ("✅ Loja oficial Azzaro", "✅ MercadoLíder Platinum")
+    v = p.get("_vendedor")
+    if not v:
+        return ""
+    if v["oficial"]:
+        return f"✅ Loja oficial {v['nome']}"
+    if v["lider"] == "platinum":
+        return f"✅ Vendido por {v['nome']} (MercadoLíder Platinum)"
+    if v["lider"] == "gold":
+        return f"✅ Vendido por {v['nome']} (MercadoLíder Gold)"
+    mil = f"+{v['vendas'] // 1000} mil vendas" if v["vendas"] >= 1000 else ""
+    return f"✅ Vendido por {v['nome']}" + (f" ({mil})" if mil else "")
 
 def loja_aceita(p):
     return degrau_loja(p) is not None

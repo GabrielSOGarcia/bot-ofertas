@@ -1,16 +1,24 @@
 # Bot "Perfumes" (09/11): grupo de perfume do MERCADO LIVRE, masculino e feminino alternando (um ♀, um ♂).
 # Combinado com o Gabriel: 1 grupo só no começo (perfume se compra muito de presente; os grupos de referência
-# misturam); separar quando passar de ~500-1000 pessoas. Só perfume original de marca, com desconto de verdade.
+# misturam); separar quando passar de ~500-1000 pessoas. Sempre com desconto de verdade.
+# 09/11 15h40, Gabriel: "perfume é perfume: pode ser cópia, pouco conhecido ou conhecido". O que manda é a LOJA:
+# 1º loja oficial da marca, 2º lojas grandes (Mercado Livre, Sephora, Amazon...), 3º outras oficiais e
+# MercadoLíder, 4º loja comum muito bem avaliada e com muitas vendas (ver degrau_loja_ml no postar_shopee.py).
 # Os produtos e o link vêm da vitrine da Central de Afiliados do Mercado Livre (mercadolivre.py), com a sessão
 # do Gabriel (ml_cookies.txt ao lado do config.txt).
 
 LOJA = "mercadolivre"
 CHAVE_CANAL = "CANAL_PERFUME"   # só se um dia postar no Telegram; hoje é só WhatsApp
-NICHO_IA = ("perfumes ORIGINAIS de marca, masculinos e femininos, do Mercado Livre (importados, árabes e "
-            "nacionais como Natura e Boticário). Recuse decant, amostra, perfume 'inspirado', contratipo ou réplica")
+NICHO_IA = ("perfumes masculinos e femininos do Mercado Livre: importados, árabes, nacionais (Natura, Boticário), "
+            "marcas pouco conhecidas e perfumes inspirados/contratipos, todos valem")
+TEXTO_MODELO_IA = (
+    "Modelo ideal: perfume ou body splash com desconto de verdade e foto REAL do produto. Pode ser marca famosa, "
+    "árabe, nacional, pouco conhecida ou perfume inspirado/contratipo (o nome deve dizer 'inspirado' quando for). "
+    "Recuse: decant, amostra, réplica falsificada vendida como se fosse o original, foto gerada por inteligência "
+    "artificial, e produto que não seja perfume, colônia ou body splash.\n")
 
 # ---------- Critérios ----------
-EXIGIR_MARCA_SEMPRE = True
+EXIGIR_MARCA_SEMPRE = False   # perfume é perfume: a garantia vem da loja (escada de lojas), não da marca
 DESCONTO_MINIMO = 15          # perfume com desconto de verdade (Natura a preço cheio não vai)
 VENDAS_MINIMAS = 500          # o Mercado Livre mostra "+500", "+1000", "+5mil"...
 VENDAS_MINIMAS_CARO = 50      # importado caro vende menos
@@ -37,9 +45,10 @@ PARECIDO_IGNORAR = ["perfume", "perfumes", "eau de parfum", "eau de toilette", "
                     "deo", "colônia", "desodorante", "masculino", "feminino", "árabe", "importado", "original",
                     "spray", "unissex", "body splash", "fragrância"]
 
-BLOQUEADAS = BLOQUEADAS + [
-    "inspirado", "inspirada", "inspirados", "inspired", "inspiração", "contratipo", "réplica", "replica",
-    "decant", "amostra", "amostras", "tester", "primeira linha", "1ª linha", "similar", "versão de",
+# Cópia/inspirado pode (Gabriel, 09/11). Fica de fora: réplica (falsificado vendido como original), decant e
+# amostra (frasquinho fracionado) e tester
+BLOQUEADAS = [b for b in BLOQUEADAS if b not in ("similar", "essência")] + [
+    "réplica", "replica", "primeira linha", "1ª linha", "decant", "amostra", "amostras", "tester",
 ]
 
 # ---------- O que buscar (substitui a lista do Casa inteira) ----------
