@@ -960,6 +960,11 @@ WHATSAPP_INTERVALO_MAX = 0 # (07/11) >0 = cada post sai entre WHATSAPP_INTERVALO
                            # pelo dia; ex.: /zapintervalo casa 8 20. 0 = desligado (espalha os do dia, como antes)
 # Com 90: ~11-12 min entre posts no horário normal e ~6 min no pico (cada minuto do pico vale 2 na conta)
 CONFIG_PATH = os.environ.get("BOT_CONFIG", r"C:\bot-config\config.txt")   # senhas fora da pasta do bot
+# (09/11) De qual loja vêm os produtos: "shopee" (Casa e Geral) ou "mercadolivre" (bot de perfume: a vitrine da
+# Central de Afiliados com a sessão do Gabriel, ver mercadolivre.py). O nicho.py troca.
+LOJA = "shopee"
+COMBINA_EM_QUALQUER_LUGAR = False   # True: a busca combina se os termos aparecem em qualquer parte do nome
+SINONIMOS_BUSCA = {}                # {"perfume": ["parfum", "colonia"...]}: termo da busca que vale por outro no nome
 # ===========================================================
 
 # ================= QUAL BOT =================
@@ -1086,11 +1091,42 @@ def buscar_por_comissao(palavra, limite=30):
         print(f"  Aviso: a Shopee não aceitou a busca por comissão ({e}). Seguindo só com a normal.")
         return []
 
-PAUSA_ENTRE_BUSCAS = 0.7   # segundos entre uma busca e outra: pedir rápido demais gera "System Error" na Shopee
+PAUSA_ENTRE_BUSCAS = PAUSA_ENTRE_BUSCAS if "PAUSA_ENTRE_BUSCAS" in globals() else 0.7   # segundos entre buscas:
+# rápido demais gera "System Error" na Shopee (o nicho do Mercado Livre põe mais)
+
+_sessao_ml = {"s": None, "avisado": False}
+
+def sessao_ml():
+    # A sessão do Mercado Livre (abre 1 vez e reaproveita). Se o Mercado Livre pedir login, avisa o painel
+    # 1 vez e para de buscar até os cookies serem exportados de novo
+    import mercadolivre
+    if _sessao_ml["s"] is None:
+        try:
+            _sessao_ml["s"] = mercadolivre.SessaoML()
+            _sessao_ml["avisado"] = False
+        except mercadolivre.SessaoCaiu as e:
+            if not _sessao_ml["avisado"]:
+                _sessao_ml["avisado"] = True
+                avisar_painel(f"🔑 <b>{html.escape(BOT)}</b>: a sessão do Mercado Livre caiu ({html.escape(str(e))}). "
+                              "No Firefox, logado no Mercado Livre: extensão Get cookies.txt LOCALLY > Export, e "
+                              "mande o arquivo para o bot-config do servidor como ml_cookies.txt.")
+            raise ErroShopee(f"sessão do Mercado Livre: {e}")
+    return _sessao_ml["s"]
+
+def buscar_mercadolivre(termo):
+    import mercadolivre
+    time.sleep(PAUSA_ENTRE_BUSCAS)
+    try:
+        return [mercadolivre.para_oferta(c) for c in sessao_ml().buscar(termo)]
+    except mercadolivre.SessaoCaiu as e:
+        _sessao_ml["s"] = None                 # na próxima busca tenta abrir de novo (e avisa se não der)
+        raise ErroShopee(f"sessão do Mercado Livre: {e}")
 
 def buscar_com_repeticao(termo):
     # Busca normal + por comissão. Se a Shopee responder "System Error" (falha passageira),
     # espera um pouco e tenta de novo (até 2 vezes) antes de desistir daquela palavra.
+    if LOJA == "mercadolivre":
+        return buscar_mercadolivre(termo)
     for tentativa in range(3):
         try:
             time.sleep(PAUSA_ENTRE_BUSCAS)
@@ -1104,6 +1140,13 @@ def buscar_com_repeticao(termo):
 
 def link_rastreado(p, palavra, caro, canal):
     # Link curto com etiquetas (canal, tipo, palavra) que aparecem no relatório de vendas da Shopee
+    if p.get("loja") == "mercadolivre":
+        # meli.la da conta de afiliado (o mesmo link no WhatsApp e no Telegram). Sem link, não posta
+        if not p.get("offerLink"):
+            p["offerLink"] = sessao_ml().gerar_link(p["_ml"]) or ""
+        if not p["offerLink"]:
+            raise ErroShopee("o Mercado Livre não gerou o link de afiliado")
+        return p["offerLink"]
     if not RASTREAR_LINKS or not p.get("productLink"):
         return p["offerLink"]
     etiquetas = [canal, "caro" if caro else "simples", re.sub(r"[^a-z0-9]", "", normalizar(palavra))[:30],
@@ -1218,6 +1261,11 @@ def combina(nome, palavra):
     # em "almofada") e os outros ficam perto dele, antes ou depois, a até 3 palavras
     # (evita "Mesa de Cabeceira ... Quarto Sala" em "mesa de sala"; aceita "Karsten Cobertor")
     busca, produto = termos(palavra), termos(nome)
+    if COMBINA_EM_QUALQUER_LUGAR:
+        # (09/11, perfume) "Natura Una Artisan Feminino Eau de Parfum" combina com "perfume feminino":
+        # cada termo da busca (ou um sinônimo dele) aparece em qualquer parte do nome
+        sin = {termos(k)[0]: {s for v in vs for s in termos(v)} for k, vs in SINONIMOS_BUSCA.items() if termos(k)}
+        return bool(busca) and all(t in produto or sin.get(t, set()) & set(produto) for t in busca)
     for inicio in [i for i, t in enumerate(produto[:4]) if t == busca[0]]:
         # "Saco Organizador Cobertor", "Arraste Copo": acessório antes do produto buscado
         if any(t in ACESSORIOS and t not in busca for t in produto[:inicio]):
@@ -1230,6 +1278,9 @@ def combina(nome, palavra):
 def parecido(nome, outro):
     # Mesmo tipo de produto: começa igual ou divide boa parte dos termos (fora os de enfeite)
     a, b = termos(nome), termos(outro)
+    # (09/11, perfume) "Perfume ... Eau de Parfum": palavras que todo produto do nicho tem não contam
+    genericos = {t for g in globals().get("PARECIDO_IGNORAR", []) for t in termos(g)}
+    a, b = [t for t in a if t not in genericos], [t for t in b if t not in genericos]
     if not a or not b:
         return False
     comuns = (set(a) & set(b)) - ENFEITES
@@ -1257,6 +1308,8 @@ def nome_valido(nome, palavra=None):
              if len(w) >= 2 and normalizar(w) not in PALAVRAS_VAZIAS | PEQUENAS]
     if len(reais) < 2:
         return False
+    if palavra is not None and COMBINA_EM_QUALQUER_LUGAR:
+        return combina(nome, palavra)          # (perfume) com os sinônimos: "Eau de Parfum" vale como "perfume"
     return palavra is None or set(termos(palavra)) <= set(termos(nome))
 
 def nome_curto(nome, palavra=None):
@@ -1839,7 +1892,8 @@ def montar_texto(p, chamada, canal="telegram", link=None):
     nome = p.get("nome_post") or nome_curto(p["productName"]) or p["productName"]
     texto = f"{esc(chamada)}\n\n{e['negrito'].format(esc(nome))}\n\n"
     if estado_campanha["fase"] == "dia":           # selo da campanha (11.11, Black Friday, 12.12) em cima do post
-        texto = e["negrito"].format(esc(f"🛍️ {estado_campanha['nome']} SHOPEE")) + "\n" + texto
+        loja_nome = "MERCADO LIVRE" if LOJA == "mercadolivre" else "SHOPEE"
+        texto = e["negrito"].format(esc(f"🛍️ {estado_campanha['nome']} {loja_nome}")) + "\n" + texto
     if MOSTRAR_BENEFICIO and p.get("beneficio"):   # frase da IA: para que serve / por que é bom
         texto += f"{esc(p['beneficio'])}\n\n"
     if variacao_preco(p) > VARIACAO_A_PARTIR:
@@ -1848,9 +1902,9 @@ def montar_texto(p, chamada, canal="telegram", link=None):
         texto += "(o preço muda conforme o modelo escolhido)\n"
     else:
         if DESCONTO_MINIMO_RISCADO <= desconto < 100:
-            antigo = preco / (1 - desconto / 100)
+            antigo = float(p.get("precoAntes") or 0) or preco / (1 - desconto / 100)   # ML manda o "de" exato
             texto += f"De {e['riscado'].format('R$ ' + preco_br(antigo))}\n"
-        texto += e["negrito"].format(f"Por R$ {preco_br(preco)}") + "\n"
+        texto += e["negrito"].format(f"Por R$ {preco_br(preco)}" + (" no Pix" if p.get("pixOnly") else "")) + "\n"
     cupom, economia = cupons.melhor(carregar_cupons(), preco, CUPOM_DESCONTO_MINIMO)
     if cupom:
         texto += (f"🎟️ Com o cupom {e['codigo'].format(esc(cupom['codigo']))}: "
@@ -2456,7 +2510,7 @@ ESPECIFICACOES = [
     (["whey", "creatina", "pré treino", "pre treino", "hipercalórico", "bcaa", "glutamina", "pasta de amendoim",
       "colágeno", "beta alanina"],
      [(_NUM + r"(\d(?:[.,]\d{1,2})?)\s*kg(?![a-z])", "{}kg"), (_NUM + r"(\d{2,4})\s*g(?![a-z])", "{}g")]),
-    (["perfume", "body splash", "colônia", "deo colônia", "eau de"],
+    (["perfume", "body splash", "colônia", "deo colônia", "eau de", "parfum", "deo parfum"],
      [(_NUM + r"(\d{2,3})\s*ml(?![a-z])", "{}ml")]),
     # 08/11: azeite e limpeza em galão ("Detergente Ypê 5 Litros", "Azeite Gallo 500ml")
     (["azeite", "vinagre", "detergente", "sabão líquido", "amaciante", "desinfetante", "lava roupas"],
@@ -3092,7 +3146,9 @@ def aprender_com_vendas():
 
 def aprender():
     # Vendas + outros grupos, e aplica no rodízio. Um erro numa parte não impede a outra nem o bot
-    for parte in (aprender_com_vendas, aprender_com_concorrentes):
+    # (o relatório de vendas é o da Shopee: o bot do Mercado Livre só aprende com os outros grupos)
+    partes = (aprender_com_concorrentes,) if LOJA == "mercadolivre" else (aprender_com_vendas, aprender_com_concorrentes)
+    for parte in partes:
         try:
             parte()
         except Exception as e:
