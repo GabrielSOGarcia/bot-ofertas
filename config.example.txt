@@ -1,0 +1,21 @@
+# Exemplo do config.txt (uma linha CHAVE=valor por item).
+# Copie para FORA da pasta do projeto, por exemplo C:\bot-config\config.txt
+# (ou aponte a variável de ambiente BOT_CONFIG para o arquivo) e troque os valores.
+# Nunca coloque o config.txt real no Git.
+
+# Bot do Telegram que posta as ofertas (token do @BotFather) e canal de destino
+TOKEN=123456789:SEU_TOKEN_DO_BOTFATHER
+CANAL=@seu_canal
+# Canal de um segundo bot (bots/geral/nicho.py usa CHAVE_CANAL = "CANAL_GERAL")
+CANAL_GERAL=@seu_outro_canal
+
+# API de afiliados da Shopee (Shopee Affiliate Open API)
+SHOPEE_APPID=000000000
+SHOPEE_SECRET=SUA_CHAVE_SECRETA_DA_SHOPEE
+
+# Painel de controle pelo Telegram (outro bot do @BotFather) e o seu ID de usuário do Telegram
+PAINEL_TOKEN=123456789:TOKEN_DO_BOT_DO_PAINEL
+PAINEL_ADMIN=000000000
+
+# Opcional: chave da API do Google Gemini (textos dos posts e leitura de cupons)
+GEMINI_KEY=SUA_CHAVE_DO_GEMINI

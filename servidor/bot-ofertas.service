@@ -1,0 +1,18 @@
+[Unit]
+Description=Bot de ofertas Achadinhos de Casa
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=USUARIO
+WorkingDirectory=/home/USUARIO/bot-ofertas
+Environment=BOT_CONFIG=/home/USUARIO/bot-config/config.txt
+Environment=BOT_OBSIDIAN=
+Environment=PYTHONIOENCODING=utf-8
+Environment=TZ=America/Sao_Paulo
+ExecStart=/usr/bin/python3 -u postar_shopee.py
+Restart=always
+RestartSec=30
+
+[Install]
+WantedBy=multi-user.target

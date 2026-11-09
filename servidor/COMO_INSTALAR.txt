@@ -1,0 +1,74 @@
+BOT NO SERVIDOR 24H — PASSO A PASSO
+===================================
+
+O QUE É
+-------
+Um computador na nuvem (VPS) que fica ligado 24h com Linux (Ubuntu). O bot roda lá
+e não depende do seu PC. Ele precisa de muito pouco: 1 CPU e 1 GB de memória sobram.
+
+
+1) CRIAR O SERVIDOR (você faz, no site do provedor)
+---------------------------------------------------
+Escolha um provedor, crie a conta e uma máquina com:
+  - Sistema: Oracle Linux 9 (padrão da Oracle, usuário "opc") ou Ubuntu 24.04 (usuário "ubuntu")
+  - Plano mais barato (1 vCPU, 1 GB RAM já serve)
+  - Acesso por senha ou chave SSH
+Anote o IP da máquina e o nome de usuário (ex.: ubuntu, root).
+
+
+2) MANDAR O BOT PARA O SERVIDOR (no CMD do seu PC)
+--------------------------------------------------
+  scp -r C:\bot-ofertas USUARIO@IP:~/bot-ofertas
+
+(troque USUARIO e IP pelos seus). O config.txt NÃO vai junto: ele fica em C:\bot-config.
+
+
+3) INSTALAR (no servidor)
+-------------------------
+Entre no servidor:
+  ssh USUARIO@IP
+E rode:
+  cd ~/bot-ofertas
+  bash servidor/instalar.sh
+
+
+4) MANDAR AS SENHAS (no CMD do seu PC)
+--------------------------------------
+  scp C:\bot-config\config.txt USUARIO@IP:~/bot-config/config.txt
+
+No servidor, confira (tem que aparecer OK em tudo, menos GEMINI_KEY se ainda não criou):
+  cd ~/bot-ofertas
+  BOT_CONFIG=~/bot-config/config.txt python3 testar_config.py
+
+
+5) LIGAR
+--------
+ANTES: desligue o bot do seu PC (Ctrl+C no CMD). Se os dois rodarem juntos, posta em dobro.
+No servidor:
+  sudo systemctl start bot-ofertas
+
+Pronto. Ele liga sozinho se o servidor reiniciar e volta sozinho se cair.
+
+
+COMANDOS DO DIA A DIA (no servidor)
+-----------------------------------
+  Ver os posts saindo ao vivo:   journalctl -u bot-ofertas -f      (Ctrl+C para sair)
+  Desligar:                      sudo systemctl stop bot-ofertas
+  Ligar:                         sudo systemctl start bot-ofertas
+  Reiniciar (depois de mudança): sudo systemctl restart bot-ofertas
+  Ver se está rodando:           systemctl status bot-ofertas
+
+
+ATUALIZAR O BOT DEPOIS DE UMA MUDANÇA (no CMD do seu PC)
+--------------------------------------------------------
+  scp C:\bot-ofertas\postar_shopee.py USUARIO@IP:~/bot-ofertas/
+e no servidor:
+  sudo systemctl restart bot-ofertas
+
+
+O QUE MUDA COM O SERVIDOR
+-------------------------
+- A tabela de Postagens do Obsidian para de ser preenchida (o Obsidian fica no seu PC).
+- O relatório de vendas continua funcionando no PC: python relatorio.py 7
+  (ele consulta a Shopee, não depende de onde o bot roda).
+- postados.txt e historico.txt passam a ficar no servidor.

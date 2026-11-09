@@ -1,0 +1,15 @@
+{
+  "name": "bot-ofertas-whatsapp",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Conexão do bot de ofertas com o WhatsApp do chip (Baileys)",
+  "main": "servidor.js",
+  "scripts": {
+    "start": "node servidor.js"
+  },
+  "dependencies": {
+    "@whiskeysockets/baileys": "^6.7.9",
+    "pino": "^9.4.0",
+    "qrcode": "^1.5.4"
+  }
+}

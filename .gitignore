@@ -1,0 +1,51 @@
+# Credenciais: o config.txt real fica FORA da pasta do projeto (ver config.example.txt)
+config.txt
+*.key
+*.pem
+.env
+.env.*
+!config.example.txt
+
+# Configuração local de ferramentas/editor
+.claude/
+CLAUDE.md
+.vscode/
+.idea/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Node
+node_modules/
+
+# Dados que o bot gera ao rodar (histórico, contagens, status, cupons, testes)
+ciclo.txt
+historico.txt
+postados.txt
+ofertas.csv
+pagina.html
+rodape.txt
+cupons.txt
+destaques*.json
+*.log
+COMO_USAR.txt
+
+# Cada bot: só o nicho.py vai para o Git (o resto é estado do servidor)
+bots/*/*
+!bots/*/nicho.py
+
+# WhatsApp: só o código. A pasta de login é a SESSÃO do chip (vale como senha)
+whatsapp/*
+!whatsapp/servidor.js
+!whatsapp/package.json
+
+# Imagens dos canais/grupos reais
+midia/
+
+# Backups
+backups/
+backups-bot/
+*.tar.gz
