@@ -978,6 +978,8 @@ LOJA = "shopee"
 COMBINA_EM_QUALQUER_LUGAR = False   # True: a busca combina se os termos aparecem em qualquer parte do nome
 SINONIMOS_BUSCA = {}                # {"perfume": ["parfum", "colonia"...]}: termo da busca que vale por outro no nome
 BUSCAS_ML = []                      # (Geral) buscas que vão no Mercado Livre em vez da Shopee (achados fortes)
+FILTROS_ML = None   # filtros extras da vitrine em cada busca ("best_seller", "extra_commission"); None = só Mais
+                    # vendidos no Geral e nenhum no bot do Mercado Livre
 # ===========================================================
 
 # ================= QUAL BOT =================
@@ -1136,10 +1138,12 @@ def buscar_mercadolivre(termo):
     time.sleep(max(PAUSA_ENTRE_BUSCAS, 1.5))
     try:
         achados = sessao_ml().buscar(termo)
-        if LOJA != "mercadolivre":             # no Geral: + os MAIS VENDIDOS dessa busca (o popular de verdade)
+        # + os MAIS VENDIDOS / GANHOS EXTRAS dessa busca (o popular de verdade e a comissão maior)
+        filtros = FILTROS_ML if FILTROS_ML is not None else ([] if LOJA == "mercadolivre" else ["best_seller"])
+        for f in filtros:
             time.sleep(1.5)
             vistos = {c["id"] for c in achados}
-            achados += [c for c in sessao_ml().buscar(termo, filtros=["best_seller"]) if c["id"] not in vistos]
+            achados += [c for c in sessao_ml().buscar(termo, filtros=[f]) if c["id"] not in vistos]
         return [mercadolivre.para_oferta(c) for c in achados]
     except mercadolivre.SessaoCaiu as e:
         _sessao_ml["s"] = None                 # na próxima busca tenta abrir de novo (e avisa se não der)

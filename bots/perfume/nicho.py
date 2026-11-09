@@ -78,12 +78,14 @@ BLOQUEADAS = [b for b in BLOQUEADAS if b not in ("similar", "essência")] + [
 # Categorias "♀" = vez do feminino; as outras = vez do masculino (ALTERNAR_FEMININO: um ♀, um ♂).
 # O peso (PESO_CATEGORIA) faz a preferência: famosos 3 vezes por volta, dupes 2, nacionais e body splash 1.
 PERFUMES = [
-    # 1º OS FAMOSOS
-    ("famoso masculino", ["sauvage eau de parfum", "sauvage dior", "1 million", "ultra male", "le male elixir",
-                          "le male", "invictus", "eros versace", "stronger with you", "acqua di gio profumo",
+    # 1º OS FAMOSOS (09/11 19h: primeiro as buscas que EXISTEM na vitrine de afiliados; as outras voltam vazias)
+    ("famoso masculino", ["perfume importado masculino", "perfume masculino", "1 million", "invictus",
+                          "rabanne masculino", "armani code", "armani", "jean paul gaultier masculino", "le male",
+                          "calvin klein masculino", "ck be", "perfume masculino eau de parfum",
+                          "sauvage eau de parfum", "sauvage dior", "ultra male", "le male elixir",
+                          "eros versace", "stronger with you", "acqua di gio profumo",
                           "the most wanted azzaro", "azzaro wanted", "y yves saint laurent", "boss bottled",
-                          "212 vip men", "bleu de chanel", "phantom rabanne", "armani code", "ck be",
-                          "jean paul gaultier masculino", "rabanne masculino"]),
+                          "212 vip men", "bleu de chanel", "phantom rabanne"]),
     ("♀ famoso feminino", ["good girl carolina herrera", "very good girl", "212 vip rosé", "carolina herrera feminino",
                            "la vie est belle", "idôle lancôme", "olympea", "lady million", "fame rabanne",
                            "libre yves saint laurent", "scandal jean paul gaultier", "my way armani",
@@ -107,8 +109,15 @@ PERFUMES = [
     ("♀ body splash", ["body splash", "body splash victoria's secret", "body splash wepink"]),
 ]
 PALAVRAS = {c: bs for c, bs in PERFUMES}
-for _c, _p in [("famoso masculino", 3), ("♀ famoso feminino", 3), ("dupe masculino", 2), ("♀ dupe feminino", 2)]:
+# 09/11 19h, Gabriel: "tá postando muito perfume feminino... ênfase no perfume MASCULINO IMPORTADO, preço muito
+# bom, comissão muito boa". Sem alternar ♀/♂: o peso decide. Importado masculino 6 vezes por volta, dupe masculino
+# 3, nacional masculino 2, os femininos 1 (uns 3 masculinos para cada feminino)
+for _c, _p in [("famoso masculino", 6), ("dupe masculino", 3), ("perfume nacional masculino", 2),
+               ("♀ famoso feminino", 1), ("♀ dupe feminino", 1), ("♀ perfume nacional feminino", 1),
+               ("♀ body splash", 1)]:
     PESO_CATEGORIA[_c] = _p
+CATEGORIA_SEM_REPETIR = 1   # com 7 categorias, a regra dos 40 posts virava revezamento e ignorava o peso
+FILTROS_ML = ["best_seller", "extra_commission"]   # cada busca traz também os mais vendidos e os de ganhos extras
 # "Caro" (1 a cada poucos posts): os de luxo, além dos famosos que já estão na lista normal
 IMPORTADOS = [
     ("luxo masculino", ["bleu de chanel parfum", "sauvage elixir", "aventus creed", "tom ford masculino",
@@ -117,7 +126,7 @@ IMPORTADOS = [
                          "tom ford feminino", "good girl supreme"]),
 ]
 CAROS = [b for _, bs in IMPORTADOS for b in bs]
-ALTERNAR_FEMININO = True
+ALTERNAR_FEMININO = False   # 09/11 19h: o masculino tem prioridade (ver PESO_CATEGORIA)
 
 def _sem_acento(t):
     return " ".join(unicodedata.normalize("NFKD", t).encode("ascii", "ignore").decode().lower().split())
