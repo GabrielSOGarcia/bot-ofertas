@@ -152,7 +152,7 @@ try:
     vendas = buscar_vendas(fim - maior_periodo * 86400, fim)
 except Exception as e:
     print("A Shopee recusou o relatório:", e)
-    print("Copie essa mensagem e mande para o Claude ajustar.")
+    print("Copie essa mensagem e use para ajustar o bot.")
     sys.exit(1)
 
 def no_periodo(d):
