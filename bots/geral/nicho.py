@@ -899,11 +899,113 @@ BLOQUEIO_EXCETO = dict(BLOQUEIO_EXCETO, perfume=["capilar"])   # perfume de cabe
 GRUPOS = [(NOME_GRUPO_GERAL, LINK_GRUPO_GERAL), (NOME_GRUPO_CASA, LINK_GRUPO_CASA),
           (NOME_GRUPO_PERFUME, LINK_GRUPO_PERFUME)]
 # A frase depois do "Bom dia/Boa tarde/Boa noite", no contexto do Geral (09/11)
+# 10/11, Gabriel: "RADAR DE OFERTAS ESTÁ BOM" (nome da marca do Geral; NOME_GRUPO_GERAL no postar_shopee.py)
 FRASES_GRUPO = {
-    "dia": ["🔥 Bom dia com achado bom: tecnologia, eletro, beleza, treino e muito mais com preço que não dá pra ignorar.",
-            "📱 O dia começou e as promoções também: celular, fone, cafeteira, creatina... tudo com desconto de verdade."],
-    "tarde": ["⚡ Tarde de promoção: separamos os achados que mais valem a pena hoje, de marca e com desconto.",
-              "🛒 Tá precisando de alguma coisa? Dá uma olhada nos achados de hoje antes de comprar em outro lugar."],
-    "noite": ["🌙 À noite saem as melhores ofertas: confere os achados de hoje antes que o preço volte.",
-              "😱 Tem achado que não dura até amanhã: aproveita os de hoje aqui no grupo."],
+    "dia": ["📡 O Radar já está ligado: hoje tem tecnologia, eletro, beleza e treino de marca com desconto de verdade.",
+            "📱 Bom dia! Celular, fone, cafeteira, creatina... o Radar vigia o preço e avisa aqui quando cai."],
+    "tarde": ["⚡ O Radar pegou as ofertas da tarde: só marca conhecida, loja confiável e preço que caiu de verdade.",
+              "🛒 Antes de comprar qualquer coisa, dá uma olhada no Radar: a gente compara e traz o melhor preço."],
+    "noite": ["🌙 As melhores ofertas do dia, filtradas pelo Radar: confere antes que o preço volte.",
+              "😱 Promoção boa não espera: o Radar separou as de hoje aqui no grupo."],
 }
+
+# ---------- 10/11, Gabriel: o Geral vira "📡 Radar de Ofertas" e fica SÓ no Mercado Livre ----------
+# "Achadinhos e Promoções é para ficar só no Mercado Livre... pode expandir pra porra toda, mas seguindo aquele
+# esquema" (marca conhecida + desconto real + loja confiável). A Shopee fica só no Achadinhos de Casa.
+# Todas as buscas do Geral vão na vitrine de afiliados do ML (mesma sessão do perfume), com a escada de lojas.
+LOJA = "mercadolivre"
+FILTROS_ML = ["best_seller"]   # busca normal + MAIS VENDIDOS de cada busca (o popular de verdade)
+FOTO_CATALOGO_OK = True        # no ML quase toda foto é de catálogo (fundo branco): aceita; foto de IA continua barrada
+NICHO_IA = ("achados e promoções do Mercado Livre (público de homens e mulheres meio a meio: "
+            "tecnologia, celular, eletro, gadgets, suplemento, roupa e treino, beleza de marca, casa, ferramenta, "
+            "carro, pet; NADA infantil: recuse brinquedo, roupa infantil, produto de bebê ou criança, canetinha e "
+            "material escolar)")
+# Mais categorias que o Mercado Livre tem forte (o resto do Geral já cobre moda, beleza, tecnologia, casa...)
+ML_EXPANDE = [
+    ("móveis e escritório", ["cadeira de escritório", "cadeira gamer", "escrivaninha", "mesa para computador",
+                             "estante de livros", "rack para tv", "sapateira"]),
+    ("♀ colchão e cama", ["colchão casal", "colchão queen", "travesseiro nasa", "box baú", "cabeceira casal"]),
+    ("console e jogos", ["nintendo switch", "xbox series s", "controle dualsense", "controle xbox", "jogo ps5"]),
+    ("automotivo de marca", ["aspirador automotivo", "compressor de ar portátil", "central multimídia",
+                             "câmera de ré", "kit lâmpada led farol", "pneu aro 14"]),
+    ("♀ eletro de cozinha", ["batedeira planetária", "mixer de mão", "sanduicheira", "fritadeira elétrica",
+                             "processador de alimentos", "chaleira elétrica"]),
+    # 10/11, Gabriel (reels "novos utensílios que comprei", 21 mil curtidas, 3 mil salvos): "tem muitos produtos
+    # aí que não tá na nossa loja, pode colocar". Testado na vitrine do ML (funil e escumadeira não tem)
+    ("♀ utensílios de cozinha", ["tábua de corte madeira", "ralador zester", "ralador de queijo",
+                                 "espátula de silicone", "forma de gelo silicone", "kit utensílios inox",
+                                 "jogo de utensílios de cozinha", "bowl inox", "peneira inox"]),
+    ("utensílios de chef", ["tábua de carne", "termômetro culinário", "timer de cozinha", "afiador de facas",
+                            "pegador inox", "espátula raspadora", "moedor de pimenta", "mini processador"]),
+]
+# utensílio bom costuma ser sem marca famosa: não trava pela marca (passa pela nota, vendas e loja)
+MARCA_OPCIONAL = MARCA_OPCIONAL + [b for c, bs in ML_EXPANDE if "utensílios" in c for b in bs]
+
+# ---------- 10/11 17h, Gabriel: "tá mandando muita coisa feminina, rosinha, bolsa, maiô, calcinha... manda coisa
+# mais pra homem: chave de fenda, ferramenta, gadgets. Aquilo do 50/50 já passou" ----------
+# Sai do Radar: moda feminina, roupa íntima, praia, calçado, bolsa, bijuteria, unha, maquiagem, cabelo e o
+# "f_mais" (que existia só para manter 50/50). Fica: skincare e casa/cozinha/limpeza (útil para todo mundo),
+# com peso 1. Sem alternar ♀/♂: o peso manda, e o masculino (ferramenta, gadget, tecnologia, carro) ganha mais vez.
+for _k in ["f_moda", "f_intima", "f_calcados", "f_bolsas", "f_acessorios", "f_unhas", "f_maquiagem", "f_cabelo",
+           "f_mais", "f_fitness", "♀ roupa de treino"]:
+    PALAVRAS.pop(_k, None)
+ALTERNAR_FEMININO = False
+BLOQUEADAS = BLOQUEADAS + ["calcinha", "sutiã", "sutia", "lingerie", "biquíni", "biquini", "maiô", "maio",
+                           "camisola", "vestido", "saia", "cropped", "salto alto", "bolsa feminina"]
+ML_FERRAMENTAS = [
+    ("ferramentas de marca", ["jogo de chave de fenda", "chave de impacto", "jogo de soquetes", "chave catraca",
+                              "multímetro digital", "serra mármore", "kit ferramentas bosch", "parafusadeira makita",
+                              "tupia", "esmerilhadeira dewalt"]),
+]
+for _cat, _buscas in ML_FERRAMENTAS:
+    PALAVRAS[_cat] = [b for b in _buscas if b not in {x for l in PALAVRAS.values() for x in l}]
+    TIPOS_PROPRIOS = TIPOS_PROPRIOS + _buscas
+CATEGORIAS_EXTRA = [(c, [_sem_acento(b) for b in bs]) for c, bs in ML_FERRAMENTAS] + CATEGORIAS_EXTRA
+MARCAS = MARCAS + [m for m in ["Bosch", "Makita", "DeWalt", "Dewalt", "Stanley", "Tramontina Pro", "Black+Decker",
+                                "Vonder", "Worker", "Gedore", "Einhell", "Wap", "Hikari", "Minipa"] if m not in MARCAS]
+for _c, _p in [("ferramentas", 4), ("ferramentas de marca", 4), ("achado: ferramenta", 4), ("gadgets da hora", 4),
+               ("gadgets úteis", 3), ("achado: tecnologia", 4), ("carregador e cabo", 3), ("fone", 3),
+               ("celular e tablet", 3), ("relógio inteligente", 3), ("periférico gamer", 3), ("console e jogos", 3),
+               ("automotivo de marca", 3), ("carro: eletrônicos", 3), ("carro: acessórios", 2), ("barba e pelos", 3),
+               ("suplemento: proteína", 3), ("suplemento: creatina e pré", 3), ("tênis esportivo", 3),
+               ("relógio masculino", 3), ("utensílios de chef", 2), ("achado: eletrodoméstico", 3),
+               ("achado: eletroportátil", 3)]:
+    PESO_CATEGORIA[_c] = _p
+for _c in list(PESO_CATEGORIA):
+    if _c.startswith("♀"):
+        PESO_CATEGORIA[_c] = 1   # o feminino que sobrou (skincare, casa) sai de vez em quando, sem prioridade
+# 10/11, Gabriel: a chamada da IA é boa ("🍗 FRANGO CROCANTE SEM ÓLEO", "💇 CABELO E PELE SAUDÁVEIS", "🎮 JOGOS
+# PESADOS SEM TRAVAR"), mas às vezes não combina: varal de chão com "CASA LIMPA SEM ESFORÇO" (isso é de robô
+# aspirador). A IA tem que falar do uso DESTE produto. Vale só no Radar (o Casa fica como está).
+CHAMADA_EXTRA_IA = (
+    "A CHAMADA TEM QUE COMBINAR COM ESTE PRODUTO, não com a categoria dele. Teste: se a mesma chamada servisse "
+    "para outro produto bem diferente, ela está errada; reescreva falando do uso deste. Exemplos: varal de chão -> "
+    "\"👕 ROUPA SECA EM QUALQUER CANTO\" (errado: \"CASA LIMPA SEM ESFORÇO\", que é de robô aspirador); robô "
+    "aspirador -> \"🤖 CASA LIMPA SEM ESFORÇO\"; air fryer -> \"🍗 FRANGO CROCANTE SEM ÓLEO\"; biotina -> "
+    "\"💇 CABELO E PELE SAUDÁVEIS\"; notebook gamer -> \"🎮 JOGOS PESADOS SEM TRAVAR\"; arara de roupas -> \"👗 "
+    "ROUPA À MOSTRA E SEM AMASSAR\"; areia de gato -> \"🐱 CAIXINHA SEM CHEIRO\"; creatina -> \"💪 MAIS FORÇA NO "
+    "TREINO\"; câmera de segurança -> \"📹 SUA CASA NA PALMA DA MÃO\"; tênis de corrida -> \"🏃 CORRIDA COM "
+    "AMORTECIMENTO\". Use as palavras do uso real (o que a pessoa faz com ele), nunca uma frase de outra coisa.\n")
+# Sem a IA, a lista antiga juntava varal e máquina de lavar com "FAXINA"/"CASA LIMPA": no Radar, lavanderia
+# tem a chamada dela (vem antes na lista, então ganha no empate)
+CHAMADAS_POR_TIPO = [
+    (["varal", "varal de chão", "prendedor", "cesto de roupa", "máquina de lavar", "lava e seca", "secadora",
+      "tábua de passar", "ferro de passar", "vaporizador", "arara", "arara de roupas"],
+     ["👕 ROUPA EM ORDEM SEM SOFRIMENTO", "🧺 LAVANDERIA MAIS PRÁTICA"]),
+    (["robô aspirador", "aspirador", "aspirador vertical", "mop"], ["🤖 CASA LIMPA SEM ESFORÇO",
+                                                                      "🧹 CHÃO LIMPO EM MINUTOS"]),
+    (["creatina", "whey", "whey protein", "pré treino"], ["💪 MAIS FORÇA NO TREINO"]),
+    (["notebook", "notebook gamer"], ["💻 RÁPIDO PRA TRABALHAR E JOGAR"]),
+    (["câmera de segurança", "câmera de segurança wifi"], ["📹 SUA CASA NA PALMA DA MÃO"]),
+] + CHAMADAS_POR_TIPO
+_expande = {b for _, bs in ML_EXPANDE for b in bs}
+PALAVRAS = {c: [p for p in l if p not in _expande] for c, l in PALAVRAS.items()}
+for _cat, _buscas in ML_EXPANDE:
+    PALAVRAS[_cat] = _buscas
+    TIPOS_PROPRIOS = TIPOS_PROPRIOS + _buscas
+    PESO_CATEGORIA[_cat] = 2
+CATEGORIAS_EXTRA = [(c, [_sem_acento(b) for b in bs]) for c, bs in ML_EXPANDE] + CATEGORIAS_EXTRA
+MARCAS = MARCAS + [m for m in ["Flexform", "Ortobom", "Castor", "Herval", "Nintendo", "Xbox", "Microsoft",
+                                "Sony", "Pioneer", "Multilaser", "Black+Decker", "Black & Decker", "Arno", "Kitchenaid",
+                                "Walita", "Electrolux", "Mondial", "Britânia", "Philco", "Pirelli", "Goodyear",
+                                "Michelin", "Bridgestone"] if m not in MARCAS]
