@@ -178,6 +178,7 @@ O bot faz isso sozinho todo dia ao começar a postar e manda o resultado aqui.
 <b>Outros grupos</b> (o chip guarda tudo que os grupos dos outros afiliados postam, com as reações)
 /concorrentes 24: cada grupo nas últimas 24 h (posts, reações, ♀/♂, os mais reagidos)
 /concorrentestop 7: os 15 mais reagidos de todos os grupos em 7 dias
+/planilha 7: planilha PERFUME / CASA / GERAL com o que cada grupo concorrente mais posta (chega como arquivo)
 /copiar casa 1 2: copia as ofertas dos canais e grupos observados com o NOSSO link (1 a cada 2 posts; 0 2 desliga).
 O Casa pega o que é de casa, o Geral o resto. Passa pelos filtros (peça, nota, preço único, TV, medida, IA)
 
@@ -543,6 +544,35 @@ def cmd_concorrentes(args):
     return (f"<b>Outros grupos (últimas {horas} h)</b>\n\n" + "\n\n".join(blocos or ["Nada nesse período."])
             + "\n\nMais reagidos de todos: /concorrentestop 7")
 
+def mandar_arquivo(chat, nome, dados, legenda=""):
+    # sendDocument com o arquivo no corpo (multipart): a planilha chega no Telegram para abrir no celular
+    fronteira = "----painel" + str(int(time.time() * 1000))
+    partes = []
+    for campo, valor in (("chat_id", str(chat)), ("caption", legenda)):
+        partes.append(f'--{fronteira}\r\nContent-Disposition: form-data; name="{campo}"\r\n\r\n{valor}\r\n'.encode())
+    partes.append((f'--{fronteira}\r\nContent-Disposition: form-data; name="document"; filename="{nome}"\r\n'
+                   "Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet\r\n\r\n").encode()
+                  + dados + b"\r\n")
+    partes.append(f"--{fronteira}--\r\n".encode())
+    req = urllib.request.Request(f"https://api.telegram.org/bot{cfg['PAINEL_TOKEN']}/sendDocument",
+                                 data=b"".join(partes),
+                                 headers={"Content-Type": f"multipart/form-data; boundary={fronteira}"})
+    with urllib.request.urlopen(req, timeout=60) as resp:
+        return json.loads(resp.read())["ok"]
+
+def cmd_planilha(args):
+    # /planilha [dias]: planilha PERFUME / CASA / GERAL com o que cada grupo concorrente mais posta (10/11)
+    import planilha_concorrentes
+    dias = int(args[0]) if args and args[0].isdigit() else 7
+    grupos = _grupos_observados(dias * 24)
+    if not any(g.get("posts") for g in grupos.values()):
+        return f"Não tenho posts dos outros grupos nos últimos {dias} dias (o chip está ouvindo? /concorrentes 24)."
+    dados, resumo = planilha_concorrentes.montar(grupos, dias)
+    mandar_arquivo(cfg["PAINEL_ADMIN"], f"concorrentes_{date.today():%d-%m}.xlsx", dados,
+                   f"📊 Concorrentes, últimos {dias} dias")
+    return ("📊 Mandei a planilha (abre no celular ou no Google Planilhas). O nº 1 de cada grupo:\n"
+            + "\n".join(html.escape(r) for r in resumo[:12]))
+
 def cmd_concorrentestop(args):
     # /concorrentestop [dias]: os 15 posts com mais reações somando todos os grupos
     dias = int(args[0]) if args and args[0].isdigit() else 7
@@ -720,14 +750,26 @@ def _destaques(bot):
 
 def cmd_destaque(args):
     bot, resto = qual_bot(args)
-    links = [a for a in resto if "shopee" in a or "shope.ee" in a]
+    # (10/11) também link do Mercado Livre (qualquer anúncio, não só da vitrine): .../p/MLB123 ou MLB-123
+    links = [a for a in resto if "shopee" in a or "shope.ee" in a or "mercadolivre.com.br" in a]
     if not links:
         raise ValueError("Mande o link do produto. Ex.: /destaque https://shopee.com.br/product/1648122739/22699055699 "
+                         "ou /destaque perfume https://www.mercadolivre.com.br/.../p/MLB17451754 "
                          "(pode mandar vários links de uma vez)")
     caminho, fila = _destaques(bot)
     na_fila = {d[0] for d in fila}
     entraram, falharam = 0, []
     for link in links:
+        if "mercadolivre.com.br" in link:
+            m = re.search(r"/(?:p|up)/(MLBU?\d+)", link) or re.search(r"MLB-?(\d{6,})", link)
+            item = (m.group(1) if m.group(1).startswith("MLB") else "MLB" + m.group(1)) if m else None
+            if not item:
+                falharam.append(link)
+            elif item not in na_fila:
+                fila.append([item, "ml", link.split("#")[0].split("?")[0]])
+                na_fila.add(item)
+                entraram += 1
+            continue
         ids = ids_do_link(link)
         if not ids:
             falharam.append(link)
@@ -933,7 +975,7 @@ COMANDOS = {
     "/zapintervalo": cmd_zapintervalo,
     "/lojaindicada": cmd_loja_indicada, "/lojacomum": cmd_loja_comum,
     "/zapzerar": cmd_zapzerar, "/zapconvite": cmd_zapconvite,
-    "/concorrentes": cmd_concorrentes, "/concorrentestop": cmd_concorrentestop,
+    "/concorrentes": cmd_concorrentes, "/concorrentestop": cmd_concorrentestop, "/planilha": cmd_planilha,
     "/campanha": cmd_campanha,
     "/copiar": cmd_ajuste(["COPIAR_OFERTAS", "COPIADOS_A_CADA"], 0, 10, "/copiar casa 1 2 (1 = liga, 1 copiada a cada 2 posts; 0 2 = desliga)"),
     "/postados": cmd_postados, "/repetidos": cmd_postados,
