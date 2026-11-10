@@ -783,7 +783,7 @@ LOJA_OFICIAL_SEMPRE = True # só posta de Loja Oficial Shopee (seguro pro client
 # várias, a preferência é:
 #   1º Loja Oficial  2º Loja Indicada pela Shopee  3º loja comum com marca conhecida  4º loja comum sem marca
 # Motivo: rodadas de ~2600 produtos com ZERO aprovados (o funil loja + vendas + marca levava 399 bons a 0),
-# e os canais que mais engajam postam muito de loja comum. Marca dá preferência,
+# e os canais que mais engajam (outro grupo etc.) postam muito de loja comum. Marca dá preferência,
 # mas só é obrigatória em produto caro e em tipo de marca forte (panela = Tramontina, Rochedo...).
 LOJA_INDICADA = 1              # 0 = Indicada deixa de ser aceita (/lojaindicada)
 LOJA_COMUM_MARCA = 1           # 0 = loja comum deixa de ser aceita (/lojacomum)
@@ -793,7 +793,7 @@ DESCONTO_MINIMO_RISCADO = 10   # abaixo de 10% de desconto não mostra o "De R$ 
 TENTATIVAS_ENVIO = 3   # se o Telegram falhar, tenta de novo antes de desistir do post
 RASTREAR_LINKS = True  # etiqueta cada link (canal, tipo, palavra) para o relatório de vendas
 PASTA_OBSIDIAN = os.environ.get("BOT_OBSIDIAN",   # no servidor: BOT_OBSIDIAN="" (sem Obsidian lá)
-                                "")  # "" desliga
+                                r"")  # "" desliga
 # Mensagem dos grupos: sai sozinha (não no fim do post), com saudação do horário e um link
 # por grupo. Lista vazia = mensagem desligada. Ex.: ("🏠 Casa (WhatsApp)", "https://...")
 GRUPOS_MIN = 15       # a mensagem dos grupos sai a cada 15 posts (90 por dia = 6 vezes)...
@@ -811,7 +811,7 @@ FRASES_GRUPO = {
 }
 # Os grupos (nome, link). Cada bot põe o dele primeiro. Link vazio = ainda não tem: fica de fora da mensagem
 NOME_GRUPO_CASA, LINK_GRUPO_CASA = "🏠 Achadinhos de Casa", "https://chat.whatsapp.com/CONVITE_DO_GRUPO_CASA"
-NOME_GRUPO_GERAL, LINK_GRUPO_GERAL = "🔗 Achadinhos & Promoções", "https://chat.whatsapp.com/CONVITE_DO_GRUPO_GERAL"
+NOME_GRUPO_GERAL, LINK_GRUPO_GERAL = "📡 Radar de Ofertas", "https://chat.whatsapp.com/CONVITE_DO_GRUPO_GERAL"
 NOME_GRUPO_PERFUME, LINK_GRUPO_PERFUME = "✈️ Duty Free Perfumes","https://chat.whatsapp.com/CONVITE_DO_GRUPO_PERFUME"
 GRUPOS = [(NOME_GRUPO_CASA, LINK_GRUPO_CASA), (NOME_GRUPO_GERAL, LINK_GRUPO_GERAL),
           (NOME_GRUPO_PERFUME, LINK_GRUPO_PERFUME)]
@@ -980,6 +980,9 @@ SINONIMOS_BUSCA = {}                # {"perfume": ["parfum", "colonia"...]}: ter
 BUSCAS_ML = []                      # (Geral) buscas que vão no Mercado Livre em vez da Shopee (achados fortes)
 FILTROS_ML = None   # filtros extras da vitrine em cada busca ("best_seller", "extra_commission"); None = só Mais
                     # vendidos no Geral e nenhum no bot do Mercado Livre
+VENDAS_LOJA_COMUM_ML = 5000   # loja comum do ML (4º degrau): pelo menos +5 mil vendas e reputação verde. O nicho troca
+FOTO_CATALOGO_OK = False      # (10/11) True: a IA aceita foto de catálogo (fundo branco); foto de IA continua barrada
+CHAMADA_EXTRA_IA = ""         # (10/11) regras a mais para a chamada que a IA escreve (o nicho põe; o Radar usa)
 # ===========================================================
 
 # ================= QUAL BOT =================
@@ -1445,8 +1448,12 @@ def revisar_com_ia(p, palavra):
     # limpo e diz se o post segue o modelo ideal. Devolve None quando não dá para usar a IA.
     marca = marca_do_produto(p)
     pedido = (
-        f"Você revisa posts de um canal de {NICHO_IA} da Shopee para o público brasileiro.\n"
+        f"Você revisa posts de um canal de {NICHO_IA}"
+        f"{'' if LOJA == 'mercadolivre' else ' da Shopee'} para o público brasileiro.\n"
         + TEXTO_MODELO_IA
+        + ("FOTO DE CATÁLOGO É ACEITA: foto oficial da marca ou do anúncio, com fundo branco ou tratado, NÃO é "
+           "motivo para recusar. Recuse por foto só se ela for gerada por inteligência artificial ou não mostrar "
+           "o produto.\n" if FOTO_CATALOGO_OK else "")
         + ("Este tipo de produto precisa de COR SÓBRIA: recuse se o produto da foto for rosa, laranja, verde, "
            "amarelo, roxo ou vermelho vivo; aceite preto, branco, cinza, bege, marrom, azul ou ciano. "
            "Cortina blackout boa é preta, branca, cinza ou marrom.\n" if pede_cor_sobria(palavra) else "")
@@ -1454,7 +1461,7 @@ def revisar_com_ia(p, palavra):
         f"Marca: {marca or 'nenhuma'}\nPreço: R$ {preco_br(p['price'])} "
         f"({int(float(p.get('priceDiscountRate') or 0))}% de desconto)\n"
         f"Desconto grande: {'sim' if desconto_grande(p) else 'não'}\n"
-        + TEXTO_CHAMADA_IA +
+        + TEXTO_CHAMADA_IA + CHAMADA_EXTRA_IA +
         "Responda só em JSON, assim: {\"nome\": \"título curto e natural em português, até 6 palavras, "
         "com o tipo do produto" + (f" e a marca {marca}" if marca else "") + ", sem inventar nada\", "
         "\"chamada\": \"...\", \"beneficio\": \"...\", "
@@ -2332,7 +2339,7 @@ def degrau_loja(p):
 LOJAS_GRANDES_ML = ["Mercado Livre", "Sephora", "Amazon", "Época Cosméticos", "Beleza na Web", "The Beauty Box",
                     "O Boticário", "Boticário", "Natura", "Eudora", "Avon", "Drogasil", "Droga Raia", "Magalu",
                     "Magazine Luiza", "Americanas", "Carrefour", "Casas Bahia", "Netshoes", "Dafiti"]
-VENDAS_LOJA_COMUM_ML = 5000   # loja comum: pelo menos +5 mil vendas (e reputação verde)
+# (VENDAS_LOJA_COMUM_ML fica lá em cima, antes do nicho.py, para o bot poder trocar: perfume usa 2000)
 
 def vendedor_ml(p):
     if "_vendedor" not in p:
@@ -2730,14 +2737,31 @@ def postar_destaque():
         if item_id in postados:
             tirar_destaque(item_id)
             continue
-        try:
-            nodes = buscar_por_item(item_id, shop_id)
-        except (ErroLimite, ErroTemporario):
-            print("  Destaque: a Shopee não respondeu agora; tento na próxima rodada.")
-            return False
-        except Exception as e:
-            print(f"  Destaque {item_id}: a Shopee recusou ({e}).")
-            nodes = []
+        if shop_id == "ml":
+            # (10/11) destaque do Mercado Livre: link de qualquer anúncio (achado no navegador pelo Gabriel)
+            import mercadolivre
+            try:
+                card = sessao_ml().produto(link)
+            except Exception as e:
+                print(f"  Destaque {item_id}: o Mercado Livre não respondeu ({type(e).__name__}); tento na próxima.")
+                return False
+            if not card:
+                tirar_destaque(item_id)
+                avisar_painel(f"⚠️ <b>{html.escape(BOT)}</b>: não consegui ler o destaque {html.escape(link)} "
+                              "no Mercado Livre (anúncio fora do ar?). Tirei da fila.")
+                continue
+            nodes = [mercadolivre.para_oferta(card)]
+            nodes[0]["itemId"] = item_id      # o id da fila (é ele que vai para o postados)
+            vendedor_ml(nodes[0])             # para a linha "✅ Vendido por ..." do post (se não ler, sai sem)
+        else:
+            try:
+                nodes = buscar_por_item(item_id, shop_id)
+            except (ErroLimite, ErroTemporario):
+                print("  Destaque: a Shopee não respondeu agora; tento na próxima rodada.")
+                return False
+            except Exception as e:
+                print(f"  Destaque {item_id}: a Shopee recusou ({e}).")
+                nodes = []
         if not nodes:
             tirar_destaque(item_id)
             avisar_painel(f"⚠️ <b>{html.escape(BOT)}</b>: não achei na Shopee o destaque {html.escape(link)} "

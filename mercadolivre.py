@@ -82,6 +82,8 @@ class SessaoML:
 
     def buscar(self, termo, offset=0, filtros=()):
         # filtros da vitrine: "best_seller" (Mais vendidos) e "extra_commission" (Ganhos extras)
+        # 10/11: apóstrofo na busca ("j'adore dior", "victoria's secret") dava HTTP 400: vai com espaço
+        termo = " ".join(re.sub(r"['’`´]", " ", termo).split())
         resp = self._api("/affiliate-program/api/hub/search?is_affiliate=true&device=desktop",
                          {"search": termo, "sort": "relevance", "offset": offset,
                           "filters": [{"id": f, "value": True} for f in filtros]})
@@ -123,6 +125,38 @@ class SessaoML:
         _vendedores[card["id"]] = v
         return v
 
+    def produto(self, link):
+        # (10/11) DESTAQUE com link de QUALQUER anúncio do Mercado Livre (não só da vitrine): a busca do site
+        # pede captcha, mas o Gabriel acha o produto no navegador e cola o link no painel. Os dados vêm do
+        # mesmo pedaço leve que o vendedor() já usa (/p/api/deferred), com nome, preço, foto e loja juntos.
+        # Devolve um card no formato do ler_card (ou None se o link não for de produto).
+        ident = re.search(r"/(?:p|up)/(MLBU?\d+)", link) or re.search(r"(MLB)-?(\d{6,})", link)
+        if not ident:
+            return None
+        pid = ident.group(1) if ident.lastindex == 1 else ident.group(1) + ident.group(2)
+        t = self._pedir(f"{BASE}/p/api/deferred?id={pid}&app=pdp&component_ids=header,price,gallery,seller_data"
+                        "&allow_test_items=false")
+        def g(padrao):
+            m = re.search(padrao, t)
+            return m.group(1) if m else None
+        nome = g(r'"title":"([^"]{5,200})"')
+        preco = g(r'"price":\{[^{}]*?"value":([\d.]+)')
+        if not nome or not preco:
+            return None
+        foto = g(r'"pictures":\[\{"id":"([\w-]+)"')
+        vendidos = re.search(r"\+(\d+)\s*(mil)?\s*vendidos", t)
+        nota = g(r'"rating_average_formatted":"([\d.]+)"') or g(r'"reviews":\{"rating":([\d.]+)')
+        url = re.sub(r"^https?://", "", link.split("#")[0].split("?")[0])
+        card = {"id": g(r'"item_id":"(MLB\d+)"') or pid, "produto": pid if "/p/" in link or "/up/" in link else None,
+                "url": url, "comissao_extra": "false", "nome": json.loads(f'"{nome}"'),
+                "preco": float(preco), "preco_antes": float(g(r'"original_value":([\d.]+)') or 0) or None,
+                "desconto": (g(r'"discount":"(\d+%)"') or "") + (" OFF" if g(r'"discount":"(\d+%)"') else ""),
+                "nota": float(nota) if nota else None,
+                "vendidos": int(vendidos.group(1)) * (1000 if vendidos.group(2) else 1) if vendidos else 0,
+                "comissao": None,
+                "foto": f"https://http2.mlstatic.com/D_NQ_NP_{foto}-O.jpg" if foto else ""}
+        return card
+
     def gerar_link(self, card):
         corpo = {"itemId": card["produto"] or card["id"], "type": "product",
                  "extraCommission": card["comissao_extra"], "itemAddToList": card["id"], "tag": self.tag,
@@ -137,7 +171,11 @@ def ler_card(card):
     review = str(comp.get("review_compacted", {}))
     nota = re.search(r"Classificação ([\d.]+)", review)
     vendidos = re.search(r"\+(\d+)(mil)?\s*vendidos", review)
-    ganhos = re.search(r"GANHOS\D{0,40}?(\d+)%", json.dumps(card.get("components"), ensure_ascii=False))
+    # 10/11: a comissão vem no chip "affiliates_commission_chip" (label "16%"). Com "GANHOS EXTRAS" o texto do
+    # chip fica longe do "%" e o jeito antigo (regex) lia 0 e recusava o produto (ex.: Asad Lattafa, 20%)
+    chip = (comp.get("chip") or {}).get("chip", {})
+    ganhos = re.search(r"(\d+)\s*%", str((chip.get("label") or {}).get("text", ""))) \
+        or re.search(r"GANHOS\D{0,40}?(\d+)%", json.dumps(card.get("components"), ensure_ascii=False))
     fotos = card.get("pictures", {}).get("pictures") or [{}]
     return {
         "id": meta.get("id"), "produto": meta.get("product_id"), "url": meta.get("url"),
